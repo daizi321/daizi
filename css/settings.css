@@ -1,0 +1,1041 @@
+/* settings.wxss */
+/* 容器样式 */
+.container {
+  padding: 0.3rem;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 标题区域样式 */
+.header-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.3rem;
+  padding: 0.2rem 0.1rem 0 0.1rem;
+  position: relative;
+}
+
+/* 标题样式 */
+.title {
+  font-size: 0.4rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  flex: 1;
+}
+
+/* 刷新按钮样式 */
+.refresh-button {
+  font-size: 0.28rem;
+  color: #07c160;
+  padding: 0.1rem 0.2rem;
+  background-color: #f0f9f0;
+  border-radius: 0.1rem;
+  transition: all 0.2s ease;
+  position: absolute;
+  right: 0.1rem;
+}
+
+/* 刷新按钮样式 */
+.refresh-button {
+  font-size: 0.28rem;
+  color: #07c160;
+  padding: 0.1rem 0.2rem;
+  background-color: #f0f9f0;
+  border-radius: 0.1rem;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:active {
+  background-color: #e0f0e0;
+  transform: scale(0.98);
+}
+
+/* 设置区块样式 */
+.setting-section {
+  background-color: #ffffff;
+  border-radius: 0.2rem;
+  padding: 0.36rem;
+  margin-bottom: 0.36rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+  border: 0.01rem solid #e8e8e8;
+}
+
+/* 设置分组样式（wxml中使用的类） */
+.setting-group {
+  background-color: #ffffff;
+  border-radius: 0.2rem;
+  padding: 0.36rem;
+  margin-bottom: 0.36rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+  border: 0.01rem solid #e8e8e8;
+}
+
+/* 区块标题样式 */
+.section-title {
+  font-size: 0.32rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+/* 项目设置分组样式 */
+.share-code-container {
+  background: #f8f8f8;
+  padding: 0.2rem;
+  margin: 0.2rem 0;
+  border-radius: 0.1rem;
+  border-left: 0.04rem solid #1989FA;
+}
+
+.share-code-label {
+  font-size: 0.28rem;
+  color: #666;
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.share-code-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 0.2rem;
+  border-radius: 0.08rem;
+  border: 0.01rem solid #eee;
+}
+
+.share-code-text {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #1989FA;
+  letter-spacing: 0.04rem;
+}
+
+.btn-small {
+  font-size: 0.24rem;
+  padding: 0 0.2rem;
+  margin: 0;
+  height: 0.6rem;
+  line-height: 0.6rem;
+}
+
+.share-code-tip {
+  font-size: 0.24rem;
+  color: #999;
+  display: block;
+  margin-top: 0.1rem;
+}
+.project-settings-group {
+  margin-bottom: 0.32rem;
+  padding: 0.28rem;
+  border: 0.01rem solid #e0e0e0;
+  border-radius: 0.12rem;
+  background-color: #f8f9fa;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0.01rem 0.04rem rgba(0,0,0,0.04);
+}
+
+/* 分组标签样式 */
+.group-label {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1aad19;
+}
+
+/* 项目名称设置样式 */
+.project-name-setting {
+  background-color: #ffffff;
+  border-radius: 0.12rem;
+  padding: 0.32rem;
+  position: relative;
+  margin-bottom: 0.24rem;
+  border: 0.01rem solid #e8e8e8;
+  transition: all 0.2s ease;
+  box-shadow: 0 0.01rem 0.03rem rgba(0,0,0,0.04);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  padding: 0.1rem 0;
+}
+
+.edit-btn {
+  color: #1aad19;
+  font-size: 0.28rem;
+  margin-left: auto;
+  padding: 0.06rem 0.2rem;
+  border-radius: 0.16rem;
+  background-color: #f0f9ff;
+}
+
+.project-name-setting:active {
+  background-color: #f5f5f5;
+  transform: scale(0.995);
+}
+
+.project-name-display {
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: #1989fa;
+  display: inline-block;
+  margin-bottom: 0.1rem;
+}
+
+.project-name-edit-area {
+  margin-top: 0.24rem;
+  padding-top: 0.24rem;
+  padding-bottom: 0.08rem;
+  border-top: 0.01rem solid #e8e8e8;
+  background-color: #fff;
+  border-radius: 0.08rem;
+  margin-left: -0.16rem;
+  margin-right: -0.16rem;
+  padding-left: 0.16rem;
+  padding-right: 0.16rem;
+  position: relative;
+  z-index: 5;
+}
+
+/* 行内布局设置 */
+.inline-input-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.inline-input-label {
+  flex-shrink: 0;
+  margin-right: 0.16rem;
+  font-size: 0.28rem;
+  color: #666;
+  min-width: 1.2rem;
+}
+
+.inline-input-field {
+  flex: 1;
+  padding: 0.2rem 0.24rem;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.08rem;
+  font-size: 0.32rem;
+  box-sizing: border-box;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  color: #333;
+  position: relative;
+  z-index: 10;
+  height: 0.8rem;
+}
+
+.inline-input-field:focus {
+  border-color: #07C160;
+  background-color: #fff;
+  color: #333;
+  outline: none;
+  box-shadow: 0 0 0.08rem rgba(7, 193, 96, 0.2);
+  position: relative;
+  z-index: 20;
+}
+
+.project-name-input {
+  width: 100%;
+  padding: 0.32rem 0.36rem;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.12rem;
+  font-size: 0.32rem;
+  margin-bottom: 0.15rem;
+  margin-top: 0.1rem;
+  box-sizing: border-box;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  color: #333;
+  /* 添加重要样式以确保输入框在真机上正常显示 */
+  position: relative;
+  z-index: 10;
+  display: block;
+  overflow: visible;
+}
+
+.project-name-input:focus {
+  border-color: #07C160;
+  background-color: #fff;
+  color: #333;
+  outline: none;
+  box-shadow: 0 0 0.08rem rgba(7, 193, 96, 0.2);
+  position: relative;
+  z-index: 20;
+}
+
+.project-name-input::placeholder {
+  color: #bfbfbf;
+  font-size: 0.3rem;
+}
+
+.edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+  gap: 0.2rem;
+  position: relative;
+  z-index: 15;
+}
+
+.confirm-project-name-btn {
+  font-size: 0.28rem;
+  padding: 0.1rem 0.3rem;
+  margin: 0;
+  background-color: #1aad19;
+  color: white;
+  border-radius: 0.12rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary {
+  font-size: 0.28rem;
+  padding: 0.1rem 0.3rem;
+  margin: 0;
+  background-color: #f0f0f0;
+  color: #333;
+  border-radius: 0.12rem;
+  transition: all 0.3s ease;
+}
+
+.confirm-project-name-btn:active {
+  background-color: #096dd9;
+}
+
+.confirm-project-name-btn:hover {
+  opacity: 0.9;
+}
+
+/* 机台数量设置样式 */
+.count-setting {
+  background-color: #ffffff;
+  border-radius: 0.12rem;
+  padding: 0.32rem;
+  position: relative;
+  border: 0.01rem solid #e8e8e8;
+  transition: all 0.2s ease;
+  box-shadow: 0 0.01rem 0.03rem rgba(0,0,0,0.04);
+}
+
+.count-setting:active {
+  background-color: #f5f5f5;
+  transform: scale(0.995);
+}
+
+.setting-label {
+  font-size: 0.3rem;
+  color: #666;
+  margin-right: 0.2rem;
+}
+
+.count-display {
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: #1989fa;
+  display: inline-block;
+  margin-bottom: 0.1rem;
+}
+
+.edit-hint {
+  font-size: 0.24rem;
+  color: #999;
+  display: block;
+  margin-top: 0.05rem;
+}
+
+/* 机台数量编辑区域样式 */
+.count-edit-area {
+  margin-top: 0.24rem;
+  padding-top: 0.24rem;
+  padding-bottom: 0.08rem;
+  border-top: 0.01rem solid #e8e8e8;
+  background-color: #fcfcfc;
+  border-radius: 0.08rem;
+  margin-left: -0.16rem;
+  margin-right: -0.16rem;
+  padding-left: 0.16rem;
+  padding-right: 0.16rem;
+}
+
+.count-input {
+  background-color: #fff;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.12rem;
+  padding: 0.32rem 0.36rem;
+  font-size: 0.32rem;
+  margin-bottom: 0.15rem;
+  box-sizing: border-box;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.count-input:focus {
+  border-color: #1989fa;
+  box-shadow: 0 0 0 0.08rem rgba(25, 137, 250, 0.1), inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  outline: none;
+  background-color: #f8fbff;
+}
+
+.count-input::placeholder {
+  color: #bfbfbf;
+  font-size: 0.3rem;
+}
+
+.range-hint {
+  font-size: 0.24rem;
+  color: #999;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.confirm-count-btn {
+  background-color: #1989fa;
+  color: #fff;
+  font-size: 0.32rem;
+  padding: 0.24rem;
+  border-radius: 0.12rem;
+  border: none;
+  width: 100%;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.confirm-count-btn:active {
+  background-color: #096dd9;
+}
+
+.confirm-count-btn:hover {
+  opacity: 0.9;
+}
+
+/* 自定义区域功能已移除 */
+
+/* 用户与协作相关样式 */
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.2rem;
+  padding: 0.2rem;
+  background-color: #f8f8f8;
+  border-radius: 0.1rem;
+}
+
+.user-info-section {
+  margin-bottom: 0.32rem;
+  padding: 0.24rem;
+  background-color: #f0f8ff;
+  border-radius: 0.12rem;
+  border: 0.01rem solid #d4e6f1;
+  box-shadow: 0 0.01rem 0.04rem rgba(0,120,255,0.08);
+}
+
+.user-name-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.16rem;
+  gap: 0.16rem;
+}
+
+.user-name {
+  font-size: 0.32rem;
+  color: #333;
+  margin-right: 0.2rem;
+  flex: 1;
+}
+
+.user-name-input {
+  flex: 1;
+  height: auto;
+  padding: 0.32rem 0.36rem;
+  border: 0.02rem solid #1989FA;
+  border-radius: 0.12rem;
+  margin-right: 0.2rem;
+  font-size: 0.32rem;
+  box-shadow: inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.edit-user-name-btn {
+  padding: 0 0.3rem;
+  height: 0.7rem;
+  line-height: 0.7rem;
+  font-size: 0.28rem;
+  background-color: #f2f2f2;
+  color: #333;
+  border-radius: 0.1rem;
+  margin-right: 0.15rem;
+}
+
+.confirm-user-name-btn {
+  padding: 0 0.3rem;
+  height: 0.7rem;
+  line-height: 0.7rem;
+  font-size: 0.28rem;
+  background-color: #1989FA;
+  color: white;
+  border-radius: 0.1rem;
+}
+
+.collaborators-section {
+  margin-top: 0.32rem;
+  padding: 0.24rem;
+  background-color: #f5f9f0;
+  border-radius: 0.12rem;
+  border: 0.01rem solid #d4e6c4;
+  box-shadow: 0 0.01rem 0.04rem rgba(76,175,80,0.08);
+}
+
+.collaborators-list {
+  background-color: #f8f8f8;
+  border-radius: 0.1rem;
+  padding: 0.1rem;
+  margin-top: 0.1rem;
+}
+
+.collaborator-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.15rem;
+  background-color: white;
+  border-radius: 0.08rem;
+  margin-bottom: 0.1rem;
+}
+
+.collaborator-name {
+  font-weight: bold;
+  flex: 1;
+}
+
+.collaborator-email {
+  flex: 2;
+  color: #666;
+  font-size: 0.26rem;
+  margin-left: 0.1rem;
+}
+
+.remove-btn {
+  color: #ff4444;
+  font-size: 0.26rem;
+  padding: 0.06rem 0.15rem;
+  border: 1px solid #ff4444;
+  border-radius: 0.2rem;
+}
+
+.no-collaborators {
+  text-align: center;
+  color: #999;
+  padding: 0.2rem;
+  background-color: #f8f8f8;
+  border-radius: 0.1rem;
+  margin-top: 0.1rem;
+}
+
+.add-collaborator-btn {
+  margin-top: 0.2rem;
+  font-size: 0.28rem;
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+}
+
+.share-code-section {
+  margin-top: 0.32rem;
+  padding: 0.24rem;
+  background-color: #fff9f0;
+  border-radius: 0.12rem;
+  border: 0.01rem solid #ffecd6;
+  box-shadow: 0 0.01rem 0.04rem rgba(255,152,0,0.08);
+}
+
+.share-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fff;
+  border-radius: 0.12rem;
+  padding: 0.24rem;
+  margin-top: 0.16rem;
+  border: 0.02rem solid #e8e8e8;
+  box-shadow: 0 0.02rem 0.06rem rgba(0,0,0,0.04);
+}
+
+.code-text {
+  font-weight: bold;
+  font-size: 0.32rem;
+  letter-spacing: 0.05rem;
+  color: #1a73e8;
+  flex: 1;
+  text-align: center;
+}
+
+.copy-btn {
+  color: white;
+  background-color: #1a73e8;
+  padding: 0.08rem 0.2rem;
+  border-radius: 0.2rem;
+  font-size: 0.26rem;
+  margin-left: 0.15rem;
+}
+
+.edit-btn {
+  color: #666;
+  background-color: #e8e8e8;
+  padding: 0.08rem 0.2rem;
+  border-radius: 0.2rem;
+  font-size: 0.26rem;
+  margin-left: 0.15rem;
+}
+
+.edit-btn:active {
+  background-color: #d0d0d0;
+}
+
+.share-hint {
+  font-size: 0.24rem;
+  color: #666;
+  margin-top: 0.1rem;
+  padding-left: 0.1rem;
+}
+
+/* 共享码编辑区域样式 */
+.share-code-edit-area {
+  background-color: #fffef8;
+  border-radius: 0.12rem;
+  padding: 0.28rem;
+  margin-top: 0.16rem;
+  border: 0.02rem solid #ffecd6;
+  box-shadow: 0 0.02rem 0.06rem rgba(255,152,0,0.06);
+}
+
+.share-code-input {
+  background-color: white;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.12rem;
+  padding: 0.32rem 0.36rem;
+  font-size: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.share-code-input:focus {
+  border-color: #1989fa;
+  box-shadow: 0 0 0 0.08rem rgba(25, 137, 250, 0.1), inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  outline: none;
+  background-color: #f8fbff;
+}
+
+.share-code-hint {
+  font-size: 0.22rem;
+  color: #999;
+  margin-top: 0.1rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.share-code-edit-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+}
+
+.share-code-edit-buttons .btn {
+  flex: 1;
+  margin: 0 0.1rem;
+  font-size: 0.26rem;
+  padding: 0.15rem;
+  border-radius: 0.08rem;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #1a73e8;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #666;
+  color: white;
+}
+
+/* 模态框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.2rem;
+  padding: 0.3rem;
+  width: 80%;
+  max-width: 6.0rem;
+}
+
+.modal-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0.3rem;
+  color: #333;
+}
+
+.modal-textarea {
+  width: 100%;
+  min-height: 2.0rem;
+  padding: 0.2rem;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.12rem;
+  font-size: 0.28rem;
+  box-sizing: border-box;
+}
+
+.form-item {
+  margin-bottom: 0.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.28rem;
+  color: #666;
+  margin-bottom: 0.1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.32rem 0.36rem;
+  border: 0.02rem solid #d9d9d9;
+  border-radius: 0.12rem;
+  font-size: 0.32rem;
+  box-shadow: inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #1989fa;
+  box-shadow: 0 0 0 0.08rem rgba(25, 137, 250, 0.1), inset 0 0.01rem 0.03rem rgba(0, 0, 0, 0.05);
+  outline: none;
+  background-color: #f8fbff;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+}
+
+.modal-btn {
+  flex: 1;
+  font-size: 0.28rem;
+  padding: 0.15rem;
+  border: none;
+  border-radius: 0.08rem;
+}
+
+.modal-btn.cancel {
+  background-color: #f0f0f0;
+  color: #333;
+  margin-right: 0.2rem;
+}
+
+.modal-btn.confirm {
+  background-color: #1a73e8;
+  color: white;
+}
+
+/* 底部按钮区域样式 */
+.bottom-buttons {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.btn {
+  flex: 1;
+  padding: 0.25rem 0;
+  font-size: 0.32rem;
+  border-radius: 0.12rem;
+  transition: all 0.2s ease;
+}
+
+.btn-default {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 0.01rem solid #ddd;
+}
+
+.btn-primary {
+  background-color: #1989fa;
+  color: #fff;
+  border: none;
+}
+
+.btn-danger {
+  background-color: #ff4444;
+  color: #fff;
+  border: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* 区块头部 */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+
+.add-btn {
+  font-size: 0.28rem;
+  color: #07c160;
+  padding: 0.08rem 0.2rem;
+  background-color: #f0f9f0;
+  border-radius: 0.1rem;
+}
+
+/* 自定义按钮 */
+.customize-btn {
+  font-size: 0.28rem;
+  color: #1989fa;
+  padding: 0.08rem 0.2rem;
+  background-color: #f0f8ff;
+  border-radius: 0.1rem;
+}
+
+/* 区域名称列表 */
+.area-names-list {
+  margin-top: 0.1rem;
+}
+
+.area-name-item {
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  background-color: #f8f9fa;
+  border-radius: 0.1rem;
+  margin-bottom: 0.1rem;
+}
+
+.area-index {
+  font-size: 0.28rem;
+  color: #999;
+  margin-right: 0.15rem;
+  width: 0.4rem;
+}
+
+.area-name-input {
+  flex: 1;
+  padding: 0.15rem 0.2rem;
+  border: 0.01rem solid #ddd;
+  border-radius: 0.08rem;
+  font-size: 0.3rem;
+}
+
+.area-name {
+  flex: 1;
+  font-size: 0.3rem;
+  color: #333;
+}
+
+/* 底部安全距离 */
+.bottom-safe {
+  height: 1.2rem;
+}
+
+/* 模态框输入框 */
+.modal-input {
+  width: 100%;
+  padding: 0.25rem;
+  border: 0.01rem solid #ddd;
+  border-radius: 0.1rem;
+  font-size: 0.3rem;
+  margin-bottom: 0.2rem;
+  box-sizing: border-box;
+}
+
+/* 隐私政策区域样式 */
+.privacy-section {
+  background: #fff;
+  border-radius: 0.12rem;
+  padding: 0.1rem 0.2rem;
+}
+
+.privacy-item {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 0.01rem solid #f0f0f0;
+}
+
+.privacy-item:last-child {
+  border-bottom: none;
+}
+
+.privacy-icon {
+  font-size: 0.36rem;
+  margin-right: 0.2rem;
+}
+
+.privacy-text {
+  flex: 1;
+  font-size: 0.28rem;
+  color: #333;
+}
+
+.privacy-arrow {
+  font-size: 0.36rem;
+  color: #ccc;
+}
+
+/* 开关控件样式 */
+.switch-control {
+  transform: scale(0.85);
+}
+
+/* 开关标签 */
+.switch-label {
+  font-size: 0.26rem;
+  color: #999;
+  margin-left: 0.1rem;
+}
+
+/* 导出间隔列表样式 */
+.interval-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  margin: 0.2rem 0;
+}
+
+.interval-item {
+  flex: 1;
+  min-width: 1.4rem;
+  padding: 0.2rem;
+  background-color: #f5f5f5;
+  border: 0.02rem solid #e0e0e0;
+  border-radius: 0.1rem;
+  text-align: center;
+  font-size: 0.28rem;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.interval-item-active {
+  background-color: #e8f8e8;
+  border-color: #07c160;
+  color: #07c160;
+  font-weight: 600;
+}
+
+.interval-item:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+/* 自动隐藏倒计时提示样式 */
+.auto-hide-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.16rem;
+  padding: 0.16rem 0.24rem;
+  background-color: #fff9e6;
+  border-radius: 0.08rem;
+  border: 0.01rem solid #ffe082;
+}
+
+.tip-icon {
+  font-size: 0.28rem;
+  margin-right: 0.1rem;
+}
+
+.tip-text {
+  font-size: 0.26rem;
+  color: #ff9800;
+}
+
+/* 临时查看模式：设置页锁定遮罩 */
+.temp-lock-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f5f5f5;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.temp-lock-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 0.48rem;
+  text-align: center;
+}
+
+.temp-lock-icon {
+  font-size: 0.8rem;
+  margin-bottom: 0.24rem;
+}
+
+.temp-lock-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.16rem;
+}
+
+.temp-lock-desc {
+  font-size: 0.26rem;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+}
+
+.temp-lock-btn {
+  padding: 0.18rem 0.56rem;
+  background: #07c160;
+  color: #fff;
+  font-size: 0.28rem;
+  border-radius: 0.4rem;
+}

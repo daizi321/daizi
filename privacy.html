@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/privacy.css">
+  <style>
+    /* privacy.css 里的 .tab-bar/.tab-item 会与底部 tabBar 组件冲突，这里改名隔离 */
+    .p-tabs {
+      display: flex;
+      background: #fff;
+      padding: 0 0.2rem;
+      border-bottom: 0.02rem solid #eee;
+    }
+    .p-tab {
+      flex: 1;
+      padding: 0.3rem 0;
+      text-align: center;
+      font-size: 0.28rem;
+      color: #666;
+      position: relative;
+      transition: color 0.3s;
+    }
+    .p-tab.active { color: #07c160; font-weight: bold; }
+    .p-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0.6rem;
+      height: 0.04rem;
+      background-color: #07c160;
+      border-radius: 0.02rem;
+    }
+    .back-link { font-size: 0.26rem; color: rgba(255,255,255,0.9); display: inline-block; margin-bottom: 0.2rem; }
+  </style>
+  <title>隐私与权限</title>
+</head>
+<body>
+
+<div class="container">
+  <!-- 顶部标题栏 -->
+  <div class="header">
+    <span class="back-link" onclick="history.back()">‹ 返回</span>
+    <div class="header-title">关于涉及权限隐私告知</div>
+    <div class="header-subtitle">保护您的隐私是我们的责任</div>
+  </div>
+
+  <!-- 标签切换 -->
+  <div class="p-tabs">
+    <div class="p-tab active" data-tab="permission" onclick="switchTab('permission')">权限说明</div>
+    <div class="p-tab" data-tab="disclaimer" onclick="switchTab('disclaimer')">免责声明</div>
+  </div>
+
+  <!-- 权限说明内容 -->
+  <div class="content" id="tabPermission">
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span><span>权限清单</span></div>
+      <div class="permission-list" id="permissionList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">⚙️</span><span>权限管理</span></div>
+      <div class="button-group">
+        <button class="btn btn-primary" type="button" onclick="checkAllPermissions()">检查并授权所有权限</button>
+        <button class="btn btn-secondary" type="button" onclick="goToSettings()">前往系统设置</button>
+      </div>
+    </div>
+
+    <div class="section tips">
+      <div class="section-title"><span class="icon">💡</span><span>温馨提示</span></div>
+      <div class="tips-content">
+        <span>• 必需权限是程序正常运行所需的基础权限</span>
+        <span>• 可选权限用于增强功能体验，您可以根据需要授权</span>
+        <span>• 您可以随时在浏览器站点设置中修改权限授权状态</span>
+        <span>• 所有数据仅存储在您的设备本地，不会上传至云端</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 免责声明内容 -->
+  <div class="content" id="tabDisclaimer" style="display:none">
+    <div class="section">
+      <div class="section-title"><span class="icon">📄</span><span>免责声明</span></div>
+      <div class="disclaimer-list" id="disclaimerList"></div>
+    </div>
+
+    <div class="section important">
+      <div class="section-title"><span class="icon">⚠️</span><span>重要提示</span></div>
+      <div class="important-content">
+        <span>本程序仅供内部设备检查管理使用。</span>
+        <span>使用前请确保您已获得相关授权。</span>
+        <span>如有任何疑问，请联系系统管理员。</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">©</span><span>版权声明</span></div>
+      <div class="copyright-content">
+        <span>本程序及其所有内容的版权归开发者所有。</span>
+        <span>未经授权，不得复制、分发或用于商业用途。</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+/* 权限清单（PWA 版本：与小程序保持同样的说明，浏览器权限在首次使用时询问） */
+var permissions = [
+  {
+    name: '相册权限',
+    description: '用于选择和上传设备检查时拍摄的图片，帮助记录设备状态。选择图片时由浏览器自动管理，无需手动授权。',
+    usage: '在工作页面上传设备照片时使用',
+    isRequired: false,
+    granted: true
+  },
+  {
+    name: '相机权限',
+    description: '用于直接拍摄设备照片，记录设备检查情况。相机权限由浏览器管理，点击拍照时会自动请求权限。',
+    usage: '在工作页面拍照上传时使用',
+    isRequired: false,
+    granted: true
+  },
+  {
+    name: '网络状态',
+    description: '用于检测网络连接状态，实现离线数据缓存和在线同步功能。',
+    usage: '全局自动检测网络状态',
+    isRequired: true,
+    granted: navigator.onLine
+  },
+  {
+    name: '本地存储',
+    description: '用于存储设备检查数据、历史记录和用户设置，确保数据本地持久化。',
+    usage: '全局数据存储',
+    isRequired: true,
+    granted: true
+  }
+];
+
+var disclaimers = [
+  { title: '数据安全', content: '本程序仅在您的设备上存储数据，不会上传至第三方服务器。您的数据完全由您自己控制。' },
+  { title: '免责声明', content: '本程序仅供设备检查记录使用，不构成任何形式的质量保证或法律责任。使用本程序产生的任何后果由使用者自行承担。' },
+  { title: '隐私保护', content: '我们尊重您的隐私，不会收集、存储或传输您的个人敏感信息。所有数据仅存储在您的设备本地。' },
+  { title: '数据管理', content: '本程序所有数据仅存储在您的设备本地，开发者无法访问或管理您的数据。如需删除数据，请在设置页清空数据或清除浏览器缓存。' },
+  { title: '责任限制', content: '对于因使用本程序导致的任何直接或间接损失，开发者不承担任何责任。请合理使用本程序。' },
+  { title: '合法使用', content: '本程序仅用于合法的设备检查和管理目的。禁止用于任何违法活动或侵犯他人权益的行为。如发现违法使用，开发者有权配合相关部门调查。' },
+  { title: '拍摄规范', content: '使用本程序相机功能时，请严格遵守当地法律法规及场所规定，严禁在禁止拍照区域（如涉及商业秘密、隐私保护、军事设施等场所）进行拍摄。违规拍照产生的一切法律责任由用户自行承担，开发者不承担任何责任。' },
+  { title: '数据备份', content: '建议您定期导出和备份检查数据。开发者不对数据丢失或损坏承担责任。' }
+];
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderPermissions() {
+  document.getElementById('permissionList').innerHTML = permissions.map(function (p) {
+    return '<div class="permission-item">' +
+      '<div class="permission-header">' +
+      '<div class="permission-name"><span>' + esc(p.name) + '</span>' +
+      (p.isRequired ? '<span class="required-tag">必需</span>' : '') + '</div>' +
+      '<div class="permission-status">' +
+      '<div class="status-dot ' + (p.granted ? 'granted' : 'denied') + '"></div>' +
+      '<span>' + (p.granted ? '已授权' : '未授权') + '</span></div>' +
+      '</div>' +
+      '<div class="permission-description">' + esc(p.description) + '</div>' +
+      '<div class="permission-usage"><span class="label">使用场景：</span><span>' + esc(p.usage) + '</span></div>' +
+      '</div>';
+  }).join('');
+}
+
+function renderDisclaimers() {
+  document.getElementById('disclaimerList').innerHTML = disclaimers.map(function (d) {
+    return '<div class="disclaimer-item">' +
+      '<div class="disclaimer-title">' + esc(d.title) + '</div>' +
+      '<div class="disclaimer-content">' + esc(d.content) + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function switchTab(tab) {
+  var tabs = document.querySelectorAll('.p-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tab);
+  }
+  document.getElementById('tabPermission').style.display = tab === 'permission' ? 'block' : 'none';
+  document.getElementById('tabDisclaimer').style.display = tab === 'disclaimer' ? 'block' : 'none';
+}
+
+function checkAllPermissions() {
+  // 浏览器权限只能在真正使用时申请，这里同步刷新网络状态即可
+  permissions[2].granted = navigator.onLine;
+  renderPermissions();
+  wx.showToast({ title: '权限状态已刷新', icon: 'success' });
+}
+
+function goToSettings() {
+  wx.showToast({ title: '请在浏览器「站点设置」中修改权限', icon: 'none', duration: 2500 });
+}
+
+renderPermissions();
+renderDisclaimers();
+</script>
+</body>
+</html>

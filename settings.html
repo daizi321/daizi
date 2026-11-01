@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/settings.css">
+  <style>
+    /* 小程序原生 switch 的 PWA 等价实现 */
+    .pwa-switch {
+      width: 0.88rem;
+      height: 0.48rem;
+      border-radius: 0.24rem;
+      background: #e0e0e0;
+      position: relative;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .pwa-switch.on { background: #07c160; }
+    .pwa-switch::after {
+      content: '';
+      position: absolute;
+      top: 0.04rem;
+      left: 0.04rem;
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.2s;
+      box-shadow: 0 0.02rem 0.04rem rgba(0,0,0,0.2);
+    }
+    .pwa-switch.on::after { left: 0.44rem; }
+  </style>
+  <title>设置</title>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-section">
+    <span class="title">应用设置</span>
+    <span class="refresh-button" onclick="location.reload()">🔄 刷新</span>
+  </div>
+
+  <div class="setting-group">
+    <div class="section-title">项目设置</div>
+
+    <div class="project-settings-group">
+      <span class="group-label">项目与状态设置</span>
+
+      <!-- 项目名称 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">项目名称:</span>
+          <span class="project-name-display" id="projectNameDisplay">呆子记录表</span>
+          <span class="edit-btn" onclick="toggleProjectName()">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="projectNameEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">项目名称：</span>
+            <input class="inline-input-field" id="projectNameInput" type="text" placeholder="请输入项目名称">
+          </div>
+          <div class="range-hint">输入项目名称，用于标识当前项目</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleProjectName()">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmProjectName()">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 项目内容 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">项目内容:</span>
+          <span class="project-name-display" id="projectContentDisplay">未设置</span>
+          <span class="edit-btn" onclick="toggleProjectContent()">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="projectContentEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">项目内容：</span>
+            <input class="inline-input-field" id="projectContentInput" type="text" placeholder="如：XX项目">
+          </div>
+          <div class="range-hint">显示在页面顶部与照片水印中</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleProjectContent()">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmProjectContent()">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 显示项目抬头 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">显示项目抬头:</span>
+          <span class="pwa-switch" id="switchHeader" onclick="toggleShowHeader()"></span>
+          <span class="switch-label" id="headerSwitchLabel">关闭</span>
+        </div>
+        <div class="range-hint">开启后将项目名称和内容作为报表抬头显示</div>
+      </div>
+
+      <!-- 项目字符 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">项目字符:</span>
+          <span class="project-name-display" id="itemCharacterDisplay">设备</span>
+          <span class="edit-btn" onclick="toggleSimpleEdit('itemCharacter')">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="itemCharacterEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">项目字符：</span>
+            <input class="inline-input-field" id="itemCharacterInput" type="text">
+          </div>
+          <div class="range-hint">修改后将替换所有设备状态中的项目字符</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleSimpleEdit('itemCharacter')">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmSimpleEdit('itemCharacter')">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 高级选项：项目名称输入 888 显示、输入 999 隐藏（默认隐藏，离开设置页自动隐藏） -->
+      <div id="advancedOptions" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 设备与区域设置 -->
+  <div class="setting-group">
+    <div class="section-title">设备与区域设置</div>
+    <div class="project-settings-group">
+      <span class="group-label">设备与区域设置</span>
+
+      <!-- 机台数量 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">机台数量:</span>
+          <span class="project-name-display" id="totalCountDisplay">50</span>
+          <span class="edit-btn" onclick="toggleSimpleEdit('totalCount')">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="totalCountEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">机台数量：</span>
+            <input class="inline-input-field" id="totalCountInput" type="number">
+          </div>
+          <div class="range-hint">机台数量范围：0-1500（0为没有机台）</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleSimpleEdit('totalCount')">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmSimpleEdit('totalCount')">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 区域数量 -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">区域数量:</span>
+          <span class="project-name-display" id="areaCountDisplay">5</span>
+          <span class="edit-btn" onclick="toggleSimpleEdit('areaCount')">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="areaCountEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">区域数量：</span>
+            <input class="inline-input-field" id="areaCountInput" type="text">
+          </div>
+          <div class="range-hint">格式说明：1. 仅数字(如20): 设置20个区域；2. 数字-数字(如5-8): 设置5个区域，每个区域8台设备</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleSimpleEdit('areaCount')">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmSimpleEdit('areaCount')">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设定进制（长按修改） -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">设定进制:</span>
+          <span class="project-name-display" id="householdSuffixDisplay">未设置</span>
+          <span class="edit-btn" id="householdEditBtn">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="householdSuffixEdit" style="display:none">
+          <div class="inline-input-row">
+            <span class="inline-input-label">设定进制：</span>
+            <input class="inline-input-field" id="householdSuffixInput" type="text">
+          </div>
+          <div class="range-hint">C=ABC；2=1/2，02=01/02；前缀符号仅作隔断：-2→1-1、1-2；数字后可带单位：5课→1-1课、1-2课。不输入则保持当前设置</div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleSimpleEdit('householdSuffix')">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmSimpleEdit('householdSuffix')">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 套用名称（长按学习） -->
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">套用名称:</span>
+          <span class="project-name-display">学习命名</span>
+          <span class="edit-btn" id="learnNamingBtn">学习</span>
+        </div>
+        <div class="range-hint">10=无区域10台；10-2=10区域每区2台；2-2-C=2区域每区2号C户（共12台）；3栋-5层-2课=识别单位。每次识别相互独立</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 当日报表设置（高级选项，输入 888 显示） -->
+  <div class="setting-group" id="dailyReportGroup" style="display:none">
+    <div class="section-title">当日报表设置</div>
+    <div class="project-settings-group">
+      <span class="group-label">当日报表设置</span>
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">自定义时段:</span>
+          <span class="pwa-switch" id="switchDailyCutoff" onclick="toggleDailyCutoff()"></span>
+          <span class="switch-label" id="dailyCutoffLabel">关闭</span>
+        </div>
+        <div class="range-hint">关闭=自然日（00:00~23:59）；启用后可自定义统计时段，最长24小时</div>
+        <div class="project-name-edit-area" id="dailyCutoffArea" style="display:none">
+          <div class="setting-row">
+            <span class="setting-label">起始时间:</span>
+            <input class="inline-input-field" id="dailyCutoffStart" type="time" value="00:00" onchange="onDailyCutoffTimeChange()">
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">截止时间:</span>
+            <input class="inline-input-field" id="dailyCutoffEnd" type="time" value="23:59" onchange="onDailyCutoffTimeChange()">
+          </div>
+          <div class="range-hint" id="dailyCutoffRangeText"></div>
+          <div class="edit-buttons">
+            <button class="btn btn-primary" type="button" onclick="confirmDailyCutoff()">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自动导出设置（高级选项，输入 888 显示） -->
+  <div class="setting-group" id="autoExportGroup" style="display:none">
+    <div class="section-title">自动导出设置</div>
+    <div class="project-settings-group">
+      <span class="group-label">自动导出设置</span>
+      <div class="project-name-setting">
+        <div class="setting-row">
+          <span class="setting-label">自动导出:</span>
+          <span class="pwa-switch" id="switchAutoExport" onclick="toggleAutoExport()"></span>
+          <span class="switch-label" id="autoExportLabel">关闭</span>
+        </div>
+        <div class="range-hint">开启后将自动备份数据到本地</div>
+      </div>
+      <div class="project-name-setting" id="exportIntervalSetting" style="display:none">
+        <div class="setting-row">
+          <span class="setting-label">导出间隔:</span>
+          <span class="project-name-display" id="exportIntervalDisplay">1小时</span>
+          <span class="edit-btn" onclick="toggleExportInterval()">修改</span>
+        </div>
+        <div class="project-name-edit-area" id="exportIntervalEdit" style="display:none">
+          <div class="range-hint">选择自动导出的时间间隔</div>
+          <div class="interval-list" id="intervalList"></div>
+          <div class="edit-buttons">
+            <button class="btn btn-secondary" type="button" onclick="toggleExportInterval()">取消</button>
+            <button class="btn btn-primary" type="button" onclick="confirmExportInterval()">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="section-title">数据管理</div>
+    <div class="project-name-setting">
+      <div class="setting-row" onclick="clearAll()">
+        <span class="setting-label" style="color:#f44336">清空所有数据</span>
+        <span class="project-name-display" style="color:#999">⚠️ 不可恢复</span>
+      </div>
+      <div class="range-hint">包括设备状态、备注、图片、历史记录与设置</div>
+    </div>
+  </div>
+
+  <div class="setting-group">
+    <div class="section-title">关于</div>
+    <div class="privacy-section">
+      <div class="privacy-item" onclick="location.href='./privacy.html'">
+        <span class="privacy-icon">🔒</span>
+        <span class="privacy-text">关于涉及权限隐私告知</span>
+        <span class="privacy-arrow">›</span>
+      </div>
+      <div class="privacy-item" onclick="showAbout()">
+        <span class="privacy-icon">ℹ️</span>
+        <span class="privacy-text">更新与反馈</span>
+        <span class="privacy-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重置与保存 -->
+  <div class="setting-group">
+    <div class="bottom-buttons">
+      <button class="btn btn-danger" type="button" onclick="resetSettings()">重置</button>
+      <button class="btn btn-primary" type="button" onclick="saveSettingsBtn()">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- 更新与反馈 操作表 -->
+<div class="action-sheet-mask" id="aboutMask" onclick="hideAbout()">
+  <div class="action-sheet" id="aboutSheet" onclick="event.stopPropagation()">
+    <div class="action-title">更新与反馈</div>
+    <div class="action-item edit" onclick="checkUpdate()">版本更新</div>
+    <div class="action-item remark" onclick="sendFeedback()">意见反馈</div>
+    <div class="action-cancel" onclick="hideAbout()">取消</div>
+  </div>
+</div>
+
+<!-- TabBar（与原小程序一致） -->
+<div class="tab-bar">
+  <div class="tab-item" onclick="location.href='./index.html'">首页</div>
+  <div class="tab-item" onclick="location.href='./work.html'">工作页面</div>
+  <div class="tab-item active">设置</div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+var settings = wx.getStorageSync('machineSettings') || {};
+
+function saveSettings() {
+  wx.setStorageSync('machineSettings', settings);
+  // 统计对象/量词单独存一份，方便报表页直接读取（与原小程序一致）
+  wx.setStorageSync('equipmentType', settings.equipmentType || '设备');
+  wx.setStorageSync('itemUnit', Object.prototype.hasOwnProperty.call(settings, 'itemUnit') ? settings.itemUnit : '台');
+}
+
+function render() {
+  document.getElementById('projectNameDisplay').textContent = settings.projectName || '呆子记录表';
+  document.getElementById('projectContentDisplay').textContent = settings.projectContent || '未设置';
+  var sw = document.getElementById('switchHeader');
+  var label = document.getElementById('headerSwitchLabel');
+  sw.classList.toggle('on', !!settings.showProjectHeader);
+  label.textContent = settings.showProjectHeader ? '启用' : '关闭';
+  renderSimpleValues();
+  renderDailyCutoff();
+  renderAutoExport();
+  renderOptions();
+}
+
+function renderSimpleValues() {
+  document.getElementById('itemCharacterDisplay').textContent = simpleValue('itemCharacter');
+  document.getElementById('totalCountDisplay').textContent = simpleValue('totalCount');
+  document.getElementById('areaCountDisplay').textContent = simpleValue('areaCount');
+  document.getElementById('householdSuffixDisplay').textContent = settings.householdSuffix || '未设置';
+}
+
+/* ---------------- 高级选项（默认隐藏，项目名称输入 888 显示 / 999 隐藏） ---------------- */
+// group 为 hiddenOptions 中对应的隐藏开关；正常/警告/错误状态共用 statusNames 开关
+var OPTION_META = [
+  { key: 'equipmentType', label: '统计对象', def: '设备', group: 'equipmentType', hint: '报表中统计的事物名称，默认“设备”' },
+  { key: 'itemUnit', label: '统计量词', def: '台', group: 'equipmentType', hint: '报表中数量后的量词，默认“台”，留空则不显示' },
+  { key: 'normal', label: '正常状态', def: '正常', group: 'statusNames', hint: '自定义状态的显示名称' },
+  { key: 'warning', label: '警告状态', def: '警告', group: 'statusNames', hint: '自定义状态的显示名称' },
+  { key: 'error', label: '错误状态', def: '错误', group: 'statusNames', hint: '自定义状态的显示名称' },
+  { key: 'areaSuffix', label: '区域名称', def: '区域', group: 'areaSuffix', hint: '区域名称后缀（如“区域1”）' },
+  { key: 'locationSuffix', label: '位置名称', def: '开心就好', group: 'locationSuffix', hint: '位置名称后缀（如“位置1”）' }
+];
+
+function isStatusKey(key) {
+  return key === 'normal' || key === 'warning' || key === 'error';
+}
+
+function optionDefault(key) {
+  var o = OPTION_META.find(function (x) { return x.key === key; });
+  return o ? o.def : '';
+}
+
+function getOptionValue(key) {
+  if (isStatusKey(key)) {
+    return (settings.statusNames && settings.statusNames[key]) || optionDefault(key);
+  }
+  // 量词允许保存空字符串（表示不显示量词）
+  if (key === 'itemUnit' && Object.prototype.hasOwnProperty.call(settings, 'itemUnit') && settings.itemUnit === '') return '';
+  return settings[key] || optionDefault(key);
+}
+
+function setOptionValue(key, val) {
+  if (isStatusKey(key)) {
+    // 状态名称整体保存，避免其它两项丢失默认值
+    settings.statusNames = {
+      normal: getOptionValue('normal'),
+      warning: getOptionValue('warning'),
+      error: getOptionValue('error')
+    };
+    settings.statusNames[key] = val;
+  } else {
+    settings[key] = val;
+  }
+}
+
+// 默认全部隐藏（与小程序一致），已保存的配置优先
+function getHiddenOptions() {
+  return Object.assign({
+    areaSuffix: true,
+    locationSuffix: true,
+    autoExport: true,
+    statusNames: true,
+    equipmentType: true
+  }, settings.hiddenOptions || {});
+}
+
+// 一次性设置所有高级选项的隐藏状态
+function setAllOptionsHidden(hidden) {
+  settings.hiddenOptions = Object.assign({}, settings.hiddenOptions, {
+    areaSuffix: hidden,
+    locationSuffix: hidden,
+    autoExport: hidden,
+    statusNames: hidden,
+    equipmentType: hidden
+  });
+  saveSettings();
+}
+
+// 生成高级选项的界面（避免与其它区块重复书写）
+function buildOptionsUI() {
+  var box = document.getElementById('advancedOptions');
+  box.innerHTML = OPTION_META.map(function (o) {
+    return '<div class="project-name-setting" id="opt-' + o.key + '">' +
+      '<div class="setting-row">' +
+        '<span class="setting-label">' + o.label + ':</span>' +
+        '<span class="project-name-display" id="opt-' + o.key + '-value"></span>' +
+        '<span class="edit-btn" ' + (isStatusKey(o.key) && o.key !== 'normal'
+          ? 'id="editbtn-' + o.key + '">长按修改'
+          : 'onclick="toggleOptionEdit(\'' + o.key + '\')">修改') + '</span>' +
+      '</div>' +
+      '<div class="project-name-edit-area" id="opt-' + o.key + '-edit" style="display:none">' +
+        '<div class="inline-input-row">' +
+          '<span class="inline-input-label">' + o.label + '：</span>' +
+          '<input class="inline-input-field" id="opt-' + o.key + '-input" type="text">' +
+        '</div>' +
+        '<div class="range-hint">' + o.hint + '</div>' +
+        '<div class="edit-buttons">' +
+          '<button class="btn btn-secondary" type="button" onclick="toggleOptionEdit(\'' + o.key + '\')">取消</button>' +
+          '<button class="btn btn-primary" type="button" onclick="confirmOptionEdit(\'' + o.key + '\')">确定</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderOptions() {
+  var hidden = getHiddenOptions();
+  var visibleCount = 0;
+  OPTION_META.forEach(function (o) {
+    var el = document.getElementById('opt-' + o.key);
+    if (!el) return;
+    var visible = !hidden[o.group];
+    el.style.display = visible ? '' : 'none';
+    if (visible) visibleCount++;
+    document.getElementById('opt-' + o.key + '-value').textContent = getOptionValue(o.key) || '（空）';
+  });
+  document.getElementById('advancedOptions').style.display = visibleCount > 0 ? '' : 'none';
+  // 当日报表 / 自动导出 同属 autoExport 隐藏开关
+  var autoVisible = !hidden.autoExport;
+  document.getElementById('dailyReportGroup').style.display = autoVisible ? '' : 'none';
+  document.getElementById('autoExportGroup').style.display = autoVisible ? '' : 'none';
+}
+
+function toggleOptionEdit(key) {
+  var box = document.getElementById('opt-' + key + '-edit');
+  var open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  if (open) document.getElementById('opt-' + key + '-input').value = getOptionValue(key);
+}
+
+function confirmOptionEdit(key) {
+  var val = document.getElementById('opt-' + key + '-input').value.trim();
+  setOptionValue(key, val);
+  saveSettings();
+  document.getElementById('opt-' + key + '-edit').style.display = 'none';
+  render();
+  wx.showToast({ title: '已保存' });
+}
+
+function toggleProjectName() {
+  var box = document.getElementById('projectNameEdit');
+  var open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  if (open) document.getElementById('projectNameInput').value = settings.projectName || '';
+}
+
+function confirmProjectName() {
+  var val = document.getElementById('projectNameInput').value.trim();
+
+  // 999：隐藏所有高级选项（项目名称保持原值，不把 999 存成项目名）
+  if (val === '999') {
+    setAllOptionsHidden(true);
+    document.getElementById('projectNameEdit').style.display = 'none';
+    render();
+    wx.showToast({ title: '已隐藏指定选项', icon: 'success' });
+    return;
+  }
+
+  // 888：临时显示所有高级选项（离开设置页自动隐藏）
+  if (val === '888') {
+    setAllOptionsHidden(false);
+    document.getElementById('projectNameEdit').style.display = 'none';
+    render();
+    wx.showToast({ title: '已显示所有选项（离开设置页自动关闭）', icon: 'success', duration: 2000 });
+    return;
+  }
+
+  settings.projectName = val;
+  saveSettings();
+  document.getElementById('projectNameEdit').style.display = 'none';
+  render();
+  wx.showToast({ title: '已保存' });
+}
+
+/* ---------------- 离开设置页自动恢复隐藏 ---------------- */
+// 与小程序 onHide/onUnload -> globalAutoHideOptions 一致
+function autoHideOptionsOnLeave() {
+  var hidden = getHiddenOptions();
+  // 只有高级选项处于显示状态时才需要恢复隐藏，避免无意义写入
+  if (!hidden.areaSuffix || !hidden.locationSuffix || !hidden.statusNames || !hidden.equipmentType || !hidden.autoExport) {
+    setAllOptionsHidden(true);
+    renderOptions();
+  }
+}
+// 关闭/刷新页面
+window.addEventListener('pagehide', autoHideOptionsOnLeave);
+window.addEventListener('beforeunload', autoHideOptionsOnLeave);
+// 切换到其它标签页/其它应用；返回时按已保存的隐藏配置重新渲染
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') {
+    autoHideOptionsOnLeave();
+  } else {
+    settings = wx.getStorageSync('machineSettings') || {};
+    render();
+  }
+});
+
+function toggleProjectContent() {
+  var box = document.getElementById('projectContentEdit');
+  var open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  if (open) document.getElementById('projectContentInput').value = settings.projectContent || '';
+}
+
+function confirmProjectContent() {
+  var val = document.getElementById('projectContentInput').value.trim();
+  settings.projectContent = val;
+  saveSettings();
+  document.getElementById('projectContentEdit').style.display = 'none';
+  render();
+  wx.showToast({ title: '已保存' });
+}
+
+function toggleShowHeader() {
+  settings.showProjectHeader = !settings.showProjectHeader;
+  saveSettings();
+  render();
+}
+
+function clearAll() {
+  if (!confirm('确定清空所有本地数据吗？此操作不可恢复。')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+/* ---------------- 更新与反馈 ---------------- */
+function showAbout() {
+  document.getElementById('aboutMask').classList.add('active');
+  document.getElementById('aboutSheet').classList.add('active');
+}
+
+function hideAbout() {
+  document.getElementById('aboutMask').classList.remove('active');
+  document.getElementById('aboutSheet').classList.remove('active');
+}
+
+function checkUpdate() {
+  hideAbout();
+  // PWA 版本更新由 Service Worker 负责，这里手动检查一次
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      regs.forEach(function (r) { r.update(); });
+      wx.showToast({ title: '已检查更新，当前为最新版本', icon: 'none' });
+    });
+  } else {
+    wx.showToast({ title: '当前为最新版本', icon: 'none' });
+  }
+}
+
+function sendFeedback() {
+  hideAbout();
+  wx.showToast({ title: '请联系系统管理员反馈', icon: 'none' });
+}
+
+/* ---------------- 设备列表读写 ---------------- */
+function getMachineList() {
+  var ms = wx.getStorageSync('machineStatus') || {};
+  return { data: ms, list: ms.checkStatus || [] };
+}
+
+function saveMachineList(list, extra) {
+  var ms = wx.getStorageSync('machineStatus') || {};
+  ms.checkStatus = list;
+  Object.keys(extra || {}).forEach(function (k) { ms[k] = extra[k]; });
+  wx.setStorageSync('machineStatus', ms);
+}
+
+/* 按区域设置重新分配设备的区域字段 */
+function applyAreaToList(list) {
+  var areaCount = parseInt(settings.areaCount, 10);
+  if (isNaN(areaCount)) areaCount = 0;
+  var suffix = settings.areaSuffix || '区域';
+  var start = parseInt(settings.areaStartIndex, 10);
+  if (isNaN(start)) start = 1;
+  if (areaCount <= 0) {
+    list.forEach(function (m) { m.area = ''; });
+    return;
+  }
+  var per = parseInt(settings.devicesPerArea, 10);
+  if (isNaN(per) || per < 1) per = Math.ceil(list.length / areaCount) || 1;
+  list.forEach(function (m, i) {
+    m.area = suffix + (Math.floor(i / per) + start);
+  });
+}
+
+/* ---------------- 机台数量（0-1500） ---------------- */
+function applyTotalCount(newCount) {
+  var s = getMachineList();
+  var list = s.list.slice();
+  var diff = newCount - list.length;
+  var removedMap = s.data.removedStatusMap || {};
+
+  if (diff > 0) {
+    for (var i = 0; i < diff; i++) {
+      var newId = String(list.length + i + 1);
+      var saved = removedMap[newId];
+      list.push({
+        id: newId,
+        name: newId,
+        displayName: newId,
+        area: '',
+        status: (saved && saved.status) || '',
+        statusTime: (saved && saved.statusTime) || '',
+        isChecked: !!(saved && saved.isChecked),
+        lastCheck: (saved && saved.lastCheck) || '',
+        checkTime: (saved && saved.checkTime) || '',
+        remark: (saved && saved.remark) || '',
+        inspector: (saved && saved.inspector) || '',
+        images: [],
+        inspectionItems: (saved && saved.inspectionItems) || []
+      });
+      if (saved) delete removedMap[newId];
+    }
+  } else if (diff < 0) {
+    // 被移除的设备保留状态，后续调大机台数量时可自动恢复
+    var dropped = list.splice(newCount);
+    dropped.forEach(function (m) {
+      removedMap[String(m.id)] = {
+        status: m.status, statusTime: m.statusTime, isChecked: m.isChecked,
+        lastCheck: m.lastCheck, checkTime: m.checkTime, remark: m.remark,
+        inspector: m.inspector, inspectionItems: m.inspectionItems
+      };
+    });
+  }
+
+  applyAreaToList(list);
+  saveMachineList(list, { removedStatusMap: removedMap });
+}
+
+/* ---------------- 区域数量解析（N / N-M / N名称 / N-M-起始名称） ---------------- */
+function parseAreaCountInput(input) {
+  var raw = String(input || '').trim();
+  if (!raw) return null;
+  var parts = raw.split(/[-－]/);
+  var res = { areaCount: null, devicesPerArea: null, areaSuffix: null, areaStartIndex: null };
+
+  if (parts.length === 3) {
+    var c = parts[0].match(/\d+/), d = parts[1].match(/\d+/), st = parts[2].match(/\d+/);
+    var zh = parts[2].match(/[^\d\s]+/g);
+    if (c && d && st) {
+      res.areaCount = parseInt(c[0]);
+      res.devicesPerArea = parseInt(d[0]);
+      res.areaStartIndex = parseInt(st[0]);
+      res.areaSuffix = (zh && zh.length) ? zh[0] : '区域';
+      return res;
+    }
+  }
+
+  if (parts.length === 2) {
+    var firstNum = parts[0].match(/\d+/);
+    var firstZh = parts[0].match(/[^\d\s]+/g);
+    var secondNum = parseInt(parts[1]);
+    if (firstNum) {
+      res.areaCount = parseInt(firstNum[0]);
+      if (firstZh && firstZh.length) res.areaSuffix = firstZh[0];
+    }
+    if (!res.areaCount || isNaN(res.areaCount)) {
+      if (isNaN(secondNum) || secondNum < 1) return 'second';
+      res.areaCount = secondNum;
+      res.devicesPerArea = secondNum;
+    } else {
+      res.devicesPerArea = secondNum;
+      var total = res.areaCount * res.devicesPerArea;
+      if (res.areaCount < 1 || res.areaCount > 500 ||
+          isNaN(res.devicesPerArea) || res.devicesPerArea < 1 || res.devicesPerArea > 100 ||
+          total > 1500) return 'range';
+    }
+    return res;
+  }
+
+  var num = raw.match(/\d+/);
+  var zh2 = raw.match(/[^\d\s]+/g);
+  if (!num) return 'range';
+  res.areaCount = parseInt(num[0]);
+  if (zh2 && zh2.length) res.areaSuffix = zh2[0];
+  return res;
+}
+
+/* ---------------- 通用单值编辑（项目字符/机台数量/区域数量/设定进制） ---------------- */
+var SIMPLE_META = {
+  itemCharacter: { def: '设备' },
+  totalCount: { def: 50 },
+  areaCount: { def: 5 },
+  householdSuffix: { def: '' }
+};
+
+function simpleValue(key) {
+  var v = settings[key];
+  if (v === undefined || v === null || v === '') return SIMPLE_META[key].def;
+  return v;
+}
+
+function toggleSimpleEdit(key) {
+  var box = document.getElementById(key + 'Edit');
+  var open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  if (open) document.getElementById(key + 'Input').value = (key === 'householdSuffix') ? (settings[key] || '') : simpleValue(key);
+}
+
+function confirmSimpleEdit(key) {
+  var val = (document.getElementById(key + 'Input').value || '').trim();
+  document.getElementById(key + 'Edit').style.display = 'none';
+
+  if (key === 'totalCount') {
+    if (!val) return;
+    var n = parseInt(val, 10);
+    if (isNaN(n) || n < 0 || n > 1500) {
+      wx.showToast({ title: '请输入有效范围的机台数量(0-1500)', icon: 'none' });
+      return;
+    }
+    settings.totalCount = n;
+    applyTotalCount(n);
+    saveSettings();
+    render();
+    wx.showToast({ title: '机台数量已更新为 ' + n, icon: 'success' });
+    return;
+  }
+
+  if (key === 'areaCount') {
+    if (!val) return;
+    var parsed = parseAreaCountInput(val);
+    if (parsed === 'second') { wx.showToast({ title: '第二个数字必须是正整数', icon: 'none' }); return; }
+    if (parsed === 'range') { wx.showToast({ title: '格式错误，总数不超过1500', icon: 'none' }); return; }
+    if (!parsed) return;
+    settings.areaCount = parsed.areaCount;
+    if (parsed.devicesPerArea) settings.devicesPerArea = parsed.devicesPerArea;
+    if (parsed.areaSuffix) settings.areaSuffix = parsed.areaSuffix;
+    if (parsed.areaStartIndex) settings.areaStartIndex = parsed.areaStartIndex;
+    var list = getMachineList().list;
+    applyAreaToList(list);
+    saveMachineList(list, {});
+    saveSettings();
+    render();
+    wx.showToast({ title: '区域数量已更新', icon: 'success' });
+    return;
+  }
+
+  // 项目字符 / 设定进制：不输入则保持当前设置
+  if (!val && key === 'householdSuffix') return;
+  settings[key] = val;
+  saveSettings();
+  render();
+  wx.showToast({ title: '已保存' });
+}
+
+/* ---------------- 学习命名（长按「学习」） ---------------- */
+function learnNaming() {
+  var list = getMachineList().list;
+  if (!list.length) {
+    wx.showToast({ title: '暂无设备可学习', icon: 'none' });
+    return;
+  }
+  var areas = [];
+  list.forEach(function (m) {
+    var a = (m.area || '').trim();
+    if (a && areas.indexOf(a) === -1) areas.push(a);
+  });
+
+  if (areas.length === 0) {
+    settings.areaCount = 0;
+    settings.devicesPerArea = list.length;
+  } else {
+    settings.areaCount = areas.length;
+    settings.devicesPerArea = Math.ceil(list.length / areas.length);
+    settings.areaSuffix = areas[0].replace(/\d+$/, '') || '区域';
+    var m2 = areas[0].match(/(\d+)$/);
+    settings.areaStartIndex = m2 ? parseInt(m2[1], 10) : 1;
+  }
+  settings.totalCount = list.length;
+  applyAreaToList(list);
+  saveMachineList(list, {});
+  saveSettings();
+  render();
+  wx.showToast({ title: '已学习当前命名', icon: 'success' });
+}
+
+/* ---------------- 长按（与小程序一致） ---------------- */
+function bindLongPress(el, onLong) {
+  if (!el) return;
+  var timer = null;
+  el.addEventListener('pointerdown', function () {
+    timer = setTimeout(function () { timer = null; onLong(); }, 500);
+  });
+  var clear = function () { if (timer) { clearTimeout(timer); timer = null; } };
+  el.addEventListener('pointerup', clear);
+  el.addEventListener('pointerleave', clear);
+  el.addEventListener('pointercancel', clear);
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+
+/* ---------------- 当日报表：自定义时段 ---------------- */
+var dailyCutoff = { enabled: false, start: '00:00', end: '23:59' };
+
+function loadDailyCutoff() {
+  var e = wx.getStorageSync('dailyCutoffEnabled');
+  dailyCutoff.enabled = e === true || e === 'true';
+  dailyCutoff.start = wx.getStorageSync('dailyCutoffStart') || '00:00';
+  dailyCutoff.end = wx.getStorageSync('dailyCutoffEnd') || '23:59';
+}
+
+function toMinutes(t) {
+  var p = String(t || '00:00').split(':');
+  return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+
+function computeCutoffText() {
+  var s = toMinutes(dailyCutoff.start);
+  var e = toMinutes(dailyCutoff.end);
+  var span, rangeText;
+  if (s === e) {
+    span = 1440;
+    rangeText = '今日 ' + dailyCutoff.start + ' ~ 次日 ' + dailyCutoff.end;
+  } else if (s < e) {
+    span = e - s;
+    rangeText = '今日 ' + dailyCutoff.start + ' ~ 今日 ' + dailyCutoff.end;
+  } else {
+    span = (1440 - s) + e;
+    rangeText = '今日 ' + dailyCutoff.start + ' ~ 次日 ' + dailyCutoff.end;
+  }
+  var h = Math.floor(span / 60);
+  var m = span % 60;
+  return { spanMin: span, rangeText: rangeText, spanText: h + '小时' + (m > 0 ? m + '分' : '') };
+}
+
+function toggleDailyCutoff() {
+  dailyCutoff.enabled = !dailyCutoff.enabled;
+  wx.setStorageSync('dailyCutoffEnabled', dailyCutoff.enabled);
+  if (dailyCutoff.enabled) {
+    wx.setStorageSync('dailyCutoffStart', dailyCutoff.start);
+    wx.setStorageSync('dailyCutoffEnd', dailyCutoff.end);
+  } else {
+    wx.showToast({ title: '已恢复自然日', icon: 'none' });
+  }
+  renderDailyCutoff();
+}
+
+function onDailyCutoffTimeChange() {
+  var start = document.getElementById('dailyCutoffStart').value || '00:00';
+  var end = document.getElementById('dailyCutoffEnd').value || '23:59';
+  if (computeCutoffTextOf(start, end).spanMin > 1440) {
+    wx.showToast({ title: '时段不能超过24小时', icon: 'none' });
+    return;
+  }
+  dailyCutoff.start = start;
+  dailyCutoff.end = end;
+  renderDailyCutoff();
+}
+
+function computeCutoffTextOf(start, end) {
+  var s = toMinutes(start), e = toMinutes(end);
+  var span = s === e ? 1440 : (s < e ? e - s : (1440 - s) + e);
+  return { spanMin: span };
+}
+
+function confirmDailyCutoff() {
+  wx.setStorageSync('dailyCutoffEnabled', true);
+  wx.setStorageSync('dailyCutoffStart', dailyCutoff.start);
+  wx.setStorageSync('dailyCutoffEnd', dailyCutoff.end);
+  wx.showToast({ title: '时段设置已保存', icon: 'success' });
+}
+
+function renderDailyCutoff() {
+  var sw = document.getElementById('switchDailyCutoff');
+  if (!sw) return;
+  sw.classList.toggle('on', dailyCutoff.enabled);
+  document.getElementById('dailyCutoffLabel').textContent = dailyCutoff.enabled ? '启用' : '关闭';
+  document.getElementById('dailyCutoffArea').style.display = dailyCutoff.enabled ? '' : 'none';
+  document.getElementById('dailyCutoffStart').value = dailyCutoff.start;
+  document.getElementById('dailyCutoffEnd').value = dailyCutoff.end;
+  var info = computeCutoffText();
+  document.getElementById('dailyCutoffRangeText').textContent =
+    '当前时段：' + info.rangeText + '（' + info.spanText + '）';
+}
+
+/* ---------------- 自动导出 ---------------- */
+var EXPORT_INTERVALS = [
+  { name: '5分钟', value: 5 * 60 * 1000 },
+  { name: '30分钟', value: 30 * 60 * 1000 },
+  { name: '1小时', value: 60 * 60 * 1000 },
+  { name: '2小时', value: 2 * 60 * 60 * 1000 },
+  { name: '6小时', value: 6 * 60 * 60 * 1000 },
+  { name: '12小时', value: 12 * 60 * 60 * 1000 },
+  { name: '24小时', value: 24 * 60 * 60 * 1000 }
+];
+var tempIntervalIndex = 0;
+
+function currentIntervalIndex() {
+  var v = Number(settings.autoExportInterval) || EXPORT_INTERVALS[2].value;
+  for (var i = 0; i < EXPORT_INTERVALS.length; i++) {
+    if (EXPORT_INTERVALS[i].value === v) return i;
+  }
+  return 2;
+}
+
+function buildIntervalList() {
+  var box = document.getElementById('intervalList');
+  box.innerHTML = EXPORT_INTERVALS.map(function (it, i) {
+    return '<div class="interval-item" data-index="' + i + '">' + it.name + '</div>';
+  }).join('');
+  box.querySelectorAll('.interval-item').forEach(function (el) {
+    el.onclick = function () {
+      tempIntervalIndex = parseInt(el.getAttribute('data-index'), 10);
+      renderIntervalActive();
+    };
+  });
+}
+
+function renderIntervalActive() {
+  var items = document.querySelectorAll('#intervalList .interval-item');
+  for (var i = 0; i < items.length; i++) {
+    items[i].classList.toggle('interval-item-active', i === tempIntervalIndex);
+  }
+}
+
+function toggleAutoExport() {
+  settings.autoExportEnabled = !settings.autoExportEnabled;
+  saveSettings();
+  renderAutoExport();
+}
+
+function toggleExportInterval() {
+  var box = document.getElementById('exportIntervalEdit');
+  var open = box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  if (open) {
+    tempIntervalIndex = currentIntervalIndex();
+    renderIntervalActive();
+  }
+}
+
+function confirmExportInterval() {
+  settings.autoExportInterval = EXPORT_INTERVALS[tempIntervalIndex].value;
+  saveSettings();
+  document.getElementById('exportIntervalEdit').style.display = 'none';
+  renderAutoExport();
+  wx.showToast({ title: '导出间隔已更新', icon: 'success' });
+}
+
+function renderAutoExport() {
+  var enabled = !!settings.autoExportEnabled;
+  document.getElementById('switchAutoExport').classList.toggle('on', enabled);
+  document.getElementById('autoExportLabel').textContent = enabled ? '开启' : '关闭';
+  document.getElementById('exportIntervalSetting').style.display = enabled ? '' : 'none';
+  document.getElementById('exportIntervalDisplay').textContent = EXPORT_INTERVALS[currentIntervalIndex()].name;
+}
+
+/* ---------------- 重置 / 保存设置 ---------------- */
+function saveSettingsBtn() {
+  // 机台数量至少为 1，区域数量可以为 0（与小程序一致）
+  if (!(settings.totalCount > 0)) settings.totalCount = 50;
+  if (!(settings.areaCount >= 0)) settings.areaCount = 5;
+  saveSettings();
+  render();
+  wx.showToast({ title: '设置已保存', icon: 'success' });
+}
+
+function resetSettings() {
+  if (!confirm('确定重置所有设置为默认值吗？')) return;
+  var keepHidden = settings.hiddenOptions;
+  settings = {
+    projectName: '呆子记录表',
+    projectContent: '',
+    itemCharacter: '设备',
+    showProjectHeader: false,
+    equipmentType: '设备',
+    itemUnit: '台',
+    totalCount: 50,
+    areaCount: 5,
+    devicesPerArea: 10,
+    areaSuffix: '区域',
+    locationSuffix: '开心就好',
+    householdSuffix: '',
+    areaStartIndex: 1,
+    statusNames: { normal: '正常', warning: '警告', error: '错误' },
+    hiddenOptions: keepHidden
+  };
+  saveSettings();
+  render();
+  wx.showToast({ title: '已重置为默认设置', icon: 'success' });
+}
+
+buildOptionsUI();
+buildIntervalList();
+loadDailyCutoff();
+
+// 与小程序一致：警告/错误状态、设定进制、套用名称 需长按才允许修改
+bindLongPress(document.getElementById('editbtn-warning'), function () { toggleOptionEdit('warning'); });
+bindLongPress(document.getElementById('editbtn-error'), function () { toggleOptionEdit('error'); });
+bindLongPress(document.getElementById('householdEditBtn'), function () { toggleSimpleEdit('householdSuffix'); });
+bindLongPress(document.getElementById('learnNamingBtn'), learnNaming);
+
+render();
+</script>
+</body>
+</html>

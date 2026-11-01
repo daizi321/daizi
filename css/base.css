@@ -1,0 +1,360 @@
+/**app.wxss**/
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+
+/* 全局输入框样式，确保文字显示 */
+input,
+textarea {
+  color: #333 !important;
+  background-color: transparent;
+  outline: none;
+}body {
+  background-color: #f8f8f8;
+  font-size: 0.28rem;
+  color: #333;
+}
+
+button {
+  font-size: 0.28rem;
+}
+/* 临时查看模式提示条 */
+.temp-import-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background-color: #576b95;
+  padding: 0.16rem 0.24rem;
+  text-align: center;
+}
+
+.temp-import-bar-text {
+  color: #ffffff;
+  font-size: 0.26rem;
+}
+
+
+/* ---- PWA 适配基础 ---- */
+html {
+  /* 750rpx = 视口宽（最大 480px），故 1rem = 100rpx */
+  font-size: calc(100vw / 7.5);
+}
+@media (min-width: 480px) {
+  html { font-size: 64px; }
+}
+html, body { height: 100%; }
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 0.28rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+* { -webkit-tap-highlight-color: transparent; }
+input, textarea, button, select { font-family: inherit; }
+button { border: none; background: none; padding: 0; color: inherit; font-size: 0.28rem; }
+img { display: block; }
+
+/* 小程序 view/text 的等价元素 */
+view, text, scroll-view { display: block; }
+
+/* ============================================================
+   PWA 通用组件（统一按小程序视觉还原，供各页面复用）
+   ============================================================ */
+
+/* 底部 tabBar 占位，避免内容被遮挡 */
+body { padding-bottom: calc(1.1rem + env(safe-area-inset-bottom)); }
+
+/* 列表头 */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.1rem 0.1rem 0.2rem;
+}
+.list-title {
+  font-size: 0.28rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* ---- 底部 tabBar（与原小程序一致：白底、绿选中、纯文字） ---- */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  display: flex;
+  padding: 0.12rem 0 calc(0.12rem + env(safe-area-inset-bottom));
+  border-top: 0.01rem solid #e5e5e5;
+  box-shadow: 0 -0.01rem 0.04rem rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  font-size: 0.26rem;
+  color: #666;
+  padding: 0.08rem 0;
+}
+.tab-item.active { color: #07c160; }
+.tab-item .tab-icon { font-size: 0.36rem; display: block; margin-bottom: 0.04rem; }
+
+/* ---- 居中弹窗 ---- */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  box-sizing: border-box;
+}
+.modal-mask.active { display: flex; }
+.modal-box {
+  background: #fff;
+  border-radius: 0.2rem;
+  width: 100%;
+  max-width: 6rem;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-title {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  padding: 0.32rem 0.3rem 0.2rem;
+}
+.modal-body {
+  padding: 0 0.3rem 0.3rem;
+  overflow-y: auto;
+}
+.modal-textarea {
+  width: 100%;
+  min-height: 2rem;
+  border: 0.02rem solid #ddd;
+  border-radius: 0.12rem;
+  padding: 0.2rem;
+  font-size: 0.3rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: none;
+  outline: none;
+}
+.form-label {
+  font-size: 0.24rem;
+  color: #999;
+  margin-bottom: 0.1rem;
+}
+.modal-footer {
+  display: flex;
+  border-top: 0.01rem solid #f0f0f0;
+}
+.modal-btn {
+  flex: 1;
+  padding: 0.28rem 0;
+  font-size: 0.32rem;
+  text-align: center;
+  color: #333;
+  background: none;
+  border: none;
+}
+.modal-btn.cancel { color: #666; border-right: 0.01rem solid #f0f0f0; }
+.modal-btn.confirm { color: #07c160; font-weight: bold; }
+.modal-btn.danger { color: #f44336; }
+
+/* ---- 底部操作表 ---- */
+.action-sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: none;
+}
+.action-sheet-mask.active { display: block; }
+.action-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 0.2rem 0.2rem 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 1001;
+  transform: translateY(110%);
+  transition: transform 0.22s ease;
+}
+.action-sheet.active { transform: translateY(0); }
+.action-title {
+  font-size: 0.26rem;
+  color: #999;
+  text-align: center;
+  padding: 0.3rem 0.3rem 0.2rem;
+}
+.action-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14rem;
+  padding: 0.3rem;
+  font-size: 0.32rem;
+  color: #333;
+  border-top: 0.01rem solid #f0f0f0;
+}
+.action-item:active { background: #f7f7f7; }
+.action-item.normal { color: #4caf50; }
+.action-item.warning { color: #ff9800; }
+.action-item.error { color: #f44336; }
+.action-item.remark { color: #1989fa; }
+.action-item.edit { color: #1989fa; }
+.action-item.clear { color: #909399; }
+.action-item.delete { color: #f44336; }
+.action-cancel {
+  padding: 0.3rem;
+  text-align: center;
+  font-size: 0.32rem;
+  color: #666;
+  border-top: 0.16rem solid #f5f5f5;
+}
+.action-cancel:active { background: #f7f7f7; }
+
+/* ---- 设备图片网格 ---- */
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.16rem;
+  margin: 0.2rem 0;
+}
+.img-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.12rem;
+  overflow: hidden;
+  background: #eee;
+}
+.img-item img { width: 100%; height: 100%; object-fit: cover; }
+.img-delete {
+  position: absolute;
+  top: 0.06rem;
+  right: 0.06rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.26rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-actions { display: flex; gap: 0.2rem; margin-top: 0.2rem; }
+.photo-btn {
+  flex: 1;
+  padding: 0.22rem 0;
+  border-radius: 0.12rem;
+  background: #07c160;
+  color: #fff;
+  font-size: 0.3rem;
+  text-align: center;
+}
+.photo-btn.album { background: #1989fa; }
+.photo-btn:disabled { background: #ccc; }
+
+/* ---- 回收站列表 ---- */
+.recycle-list { max-height: 50vh; overflow-y: auto; }
+.recycle-item {
+  display: flex;
+  align-items: center;
+  padding: 0.24rem 0.2rem;
+  border-bottom: 0.01rem solid #f5f5f5;
+}
+.recycle-item:active { background: #f9f9f9; }
+.recycle-item .checkbox {
+  width: 0.36rem;
+  height: 0.36rem;
+  border: 0.02rem solid #ddd;
+  border-radius: 0.08rem;
+  margin-right: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.24rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.recycle-item.checked .checkbox { background: #07c160; border-color: #07c160; }
+.recycle-info { flex: 1; }
+.recycle-name { font-size: 0.3rem; color: #333; }
+.recycle-meta { font-size: 0.24rem; color: #999; margin-top: 0.06rem; }
+.recycle-empty { text-align: center; padding: 0.6rem; color: #999; font-size: 0.28rem; }
+.recycle-select-all {
+  padding: 0.2rem 0.3rem;
+  font-size: 0.26rem;
+  color: #1989fa;
+  border-bottom: 0.01rem solid #f5f5f5;
+  border-top: 0.01rem solid #f0f0f0;
+}
+.recycle-actions { display: flex; border-top: 0.01rem solid #f0f0f0; }
+
+/* ---- 进度遮罩 ---- */
+.progress-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.progress-overlay.active { display: flex; }
+.progress-box {
+  background: #fff;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.16rem;
+  text-align: center;
+  min-width: 3rem;
+}
+.progress-box .progress-text { font-size: 0.28rem; color: #333; }
+
+/* ---- 简易统计条 ---- */
+.stats-bar {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.26rem;
+  color: #666;
+  padding: 0.1rem 0 0.2rem;
+}
+.stats-bar strong { color: #07c160; font-size: 0.3rem; }
+
+/* 检查项说明文字 */
+.inspection-hint {
+  display: block;
+  font-size: 0.22rem;
+  color: #999;
+  margin-top: 0.12rem;
+}
+
+/* app.wxss 的 .container 是 flex 全屏容器；PWA 各页面用它作整页包裹，
+   这里改为普通块级，避免子卡片被压缩裁剪 */
+.container { display: block; height: auto; }

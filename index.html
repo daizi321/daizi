@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/index.css">
+  <style>
+    /* 首页整体按小程序纵向布局，居中列宽 */
+    .index-container { padding-top: 0.4rem; }
+    .progress-container { width: 100%; max-width: 7.0rem; margin-bottom: 0.1rem; }
+
+    /* 按钮竖排、通栏（与小程序一致） */
+    .button-group { flex-direction: column; max-width: 7.0rem; }
+    .button-group button { width: 100%; max-width: 100%; }
+
+    /* 三个弹窗统一用 class 控制显隐 */
+    .modal-overlay { display: none; }
+    .modal-overlay.active { display: flex; }
+
+    /* 临时密码弹窗：内容区滚动，头尾常驻可见 */
+    #pwdMask .modal-content { max-height: 88vh; display: flex; flex-direction: column; }
+    #pwdMask .modal-body { overflow-y: auto; flex: 1; }
+    #pwdList { max-height: none; }
+    .password-item { cursor: pointer; }
+    .password-item-value { color: #07c160; font-weight: bold; font-size: 0.3rem; word-break: break-all; }
+
+    .current-user { cursor: pointer; }
+  </style>
+  <title>呆子记录表</title>
+</head>
+<body>
+
+<div class="index-container">
+  <div class="header">
+    <div class="title" id="projectName">呆子记录表</div>
+    <div class="subtitle" id="projectContent">离线巡检 · 自动水印 · 一键导出</div>
+  </div>
+
+  <!-- 进度卡（长按设置今日计划，短按切换今日/整体） -->
+  <div class="progress-container" id="progressCard">
+    <!-- 今日进度：仅设置今日计划后显示 -->
+    <div id="todayProgressBlock" style="display:none">
+      <div class="progress-header">
+        <span class="progress-title">今日进度</span>
+        <span class="progress-header-right">
+          <span class="progress-percent" id="todayPct">0%</span>
+          <span class="expand-icon">›</span>
+        </span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill today-fill" id="todayFill" style="width:0%"></div>
+      </div>
+      <div class="progress-info">
+        <span class="progress-detail">今日完成: <span id="todayChecked">0</span> / <span id="todayPlanTotal">0</span></span>
+      </div>
+    </div>
+
+    <!-- 整体进度 -->
+    <div id="totalProgressBlock">
+      <div class="progress-header">
+        <span class="progress-title">整体进度</span>
+        <span class="progress-header-right">
+          <span class="progress-percent" id="progressPct">0%</span>
+          <span class="expand-icon" id="progressArrow">›</span>
+        </span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill total-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-info">
+        <span class="progress-detail">整体完成: <span id="checkedCount">0</span> / <span id="totalCount">0</span></span>
+        <span class="countdown-tip" id="autoSwitchTip" style="display:none"></span>
+      </div>
+      <div class="progress-info" id="progressDetail" style="display:none">
+        <span class="progress-detail" id="progressDetailText"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 授权状态（始终占据位置） -->
+  <div class="permission-info-wrapper">
+    <div class="permission-info" id="permissionInfo"></div>
+  </div>
+
+  <div class="button-group">
+    <button class="action-btn start-btn" id="startBtn" type="button">开始</button>
+    <button class="action-btn start-btn" id="userBtn" type="button">呆子</button>
+    <button class="action-btn report-btn" type="button" onclick="location.href='./report.html'">查看报表</button>
+  </div>
+
+  <div class="current-user" id="currentUser" style="display:none"></div>
+</div>
+
+<!-- TabBar（与原小程序一致） -->
+<div class="tab-bar">
+  <div class="tab-item active">首页</div>
+  <div class="tab-item" onclick="location.href='./work.html'">工作页面</div>
+  <div class="tab-item" onclick="location.href='./settings.html'">设置</div>
+</div>
+
+<!-- 授权码输入弹窗 -->
+<div class="modal-overlay" id="authMask">
+  <div class="modal-content">
+    <div class="modal-header"><span class="modal-title">请输入授权码</span></div>
+    <div class="modal-body">
+      <input class="password-input" id="authInput" type="text" placeholder="请输入授权码" maxlength="40">
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeMask('authMask')">取消</button>
+      <button class="confirm-btn" onclick="confirmAuthInput()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置用户名称弹窗 -->
+<div class="modal-overlay" id="userMask">
+  <div class="modal-content">
+    <div class="modal-header"><span class="modal-title">设置用户名称</span></div>
+    <div class="modal-body">
+      <input class="password-input" id="userInput" type="text" placeholder="请输入用户名称" maxlength="20">
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeMask('userMask')">取消</button>
+      <button class="confirm-btn" onclick="confirmUserName()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置今日计划弹窗 -->
+<div class="modal-overlay" id="planMask">
+  <div class="modal-content">
+    <div class="modal-header"><span class="modal-title" id="planTitle">设置今日计划</span></div>
+    <div class="modal-body">
+      <input class="password-input" id="planInput" type="text" placeholder="请输入今日计划数量" maxlength="40">
+      <div class="modal-hint" id="planHint" style="margin-top:0.16rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeMask('planMask')">取消</button>
+      <button class="confirm-btn" onclick="confirmPlan()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 管理员验证弹窗 -->
+<div class="modal-overlay" id="adminMask">
+  <div class="modal-content">
+    <div class="modal-header"><span class="modal-title">管理员验证</span></div>
+    <div class="modal-body">
+      <input class="password-input" id="adminInput" type="password" placeholder="请输入管理员密码">
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeMask('adminMask')">取消</button>
+      <button class="confirm-btn" onclick="confirmAdminPassword()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 管理员 - 生成临时密码弹窗 -->
+<div class="modal-overlay" id="pwdMask">
+  <div class="modal-content">
+    <div class="modal-header"><span class="modal-title">管理员 - 生成临时密码</span></div>
+    <div class="modal-body">
+      <div class="password-list" id="pwdList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="confirm-btn" onclick="closeMask('pwdMask')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 隐私政策弹窗（与小程序一致：读到底 + 3 秒倒计时才能同意） -->
+<div class="privacy-modal-overlay" id="privacyModal" style="display:none">
+  <div class="privacy-modal-content">
+    <div class="privacy-modal-header">
+      <span class="privacy-modal-title">📋 关于涉及权限隐私告知</span>
+    </div>
+    <div class="privacy-modal-body" id="privacyBody">
+      <div class="privacy-section">
+        <div class="privacy-section-title">🔒 权限说明</div>
+        <div class="privacy-item-list">
+          <div class="privacy-item">
+            <span class="privacy-item-icon">📷</span>
+            <div class="privacy-item-info">
+              <div class="privacy-item-name">相册权限</div>
+              <div class="privacy-item-desc">用于选择和上传设备检查时拍摄的图片</div>
+            </div>
+          </div>
+          <div class="privacy-item">
+            <span class="privacy-item-icon">📸</span>
+            <div class="privacy-item-info">
+              <div class="privacy-item-name">相机权限</div>
+              <div class="privacy-item-desc">用于直接拍摄设备照片，记录检查情况</div>
+            </div>
+          </div>
+          <div class="privacy-item">
+            <span class="privacy-item-icon">📶</span>
+            <div class="privacy-item-info">
+              <div class="privacy-item-name">网络状态</div>
+              <div class="privacy-item-desc">用于检测网络连接状态，实现离线数据缓存</div>
+            </div>
+          </div>
+          <div class="privacy-item">
+            <span class="privacy-item-icon">💾</span>
+            <div class="privacy-item-info">
+              <div class="privacy-item-name">本地存储</div>
+              <div class="privacy-item-desc">用于存储设备检查数据和用户设置</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="privacy-section">
+        <div class="privacy-section-title">⚠️ 免责声明</div>
+        <div class="privacy-disclaimer">
+          <div>• 本应用仅供合法的设备检查记录使用</div>
+          <div>• 禁止用于任何违法活动或侵犯他人权益的行为</div>
+          <div>• 所有数据仅存储在您的设备本地</div>
+          <div>• 开发者不对数据丢失承担责任</div>
+          <div>• 使用本应用产生的后果由使用者自行承担</div>
+        </div>
+      </div>
+      <div class="privacy-countdown-area">
+        <div class="privacy-countdown" id="privacyCountdown" style="display:none">
+          <span class="privacy-countdown-text">请等待 <span class="countdown-number" id="countdownNumber">3</span> 秒</span>
+        </div>
+        <div class="privacy-countdown-complete" id="privacyCountdownComplete" style="display:none">
+          <span class="privacy-countdown-complete-text">✓ 已阅读完毕</span>
+        </div>
+      </div>
+    </div>
+    <div class="privacy-modal-footer">
+      <button class="privacy-btn privacy-btn-secondary" type="button" onclick="rejectPrivacy()">拒绝</button>
+      <button class="privacy-btn privacy-btn-primary disabled" type="button" id="privacyAgreeBtn" onclick="agreePrivacy()">请先阅读完</button>
+    </div>
+  </div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+var DAY = 24 * 60 * 60 * 1000;
+var permissionTimer = null;
+
+/* ---------------- 基础工具 ---------------- */
+function closeMask(id) {
+  document.getElementById(id).classList.remove('active');
+}
+function openMask(id) {
+  document.getElementById(id).classList.add('active');
+}
+function getExpireTime() {
+  return Number(wx.getStorageSync('appPermissionExpireTime')) || 0;
+}
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function formatTime(ts) {
+  var d = new Date(ts);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+    ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+/* ---------------- 今日计划（长按进度卡设置） ---------------- */
+var PLAN_COUNT_KEY = 'dailyPlanCount';
+var PLAN_DATE_KEY = 'dailyPlanDate';
+var planCount = 0;
+var autoSwitchTimer = null;
+var autoSwitchLeft = 0;
+
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+/* 读取今日计划；不是今天设置的则自动清除 */
+function loadPlanCount() {
+  var saved = parseInt(wx.getStorageSync(PLAN_COUNT_KEY)) || 0;
+  var savedDate = wx.getStorageSync(PLAN_DATE_KEY);
+  if (saved > 0 && savedDate && savedDate !== getTodayStr()) {
+    wx.removeStorageSync(PLAN_COUNT_KEY);
+    wx.removeStorageSync(PLAN_DATE_KEY);
+    return 0;
+  }
+  return saved > 0 ? saved : 0;
+}
+
+/* 判断检查时间是否为今天，兼容 2026/10/31 14:30:00、2026-10-31、带上午/下午 等写法 */
+function isTodayTime(value) {
+  if (!value) return false;
+  var s = String(value);
+  var cut = s.search(/上午|下午/);
+  if (cut > 0) s = s.slice(0, cut);
+  var space = s.indexOf(' ');
+  var datePart = space > 0 ? s.slice(0, space) : s;
+  var y, m, d;
+  if (datePart.indexOf('/') > 0) {
+    var a = datePart.split('/'); y = a[0]; m = a[1]; d = a[2];
+  } else if (datePart.indexOf('-') > 0) {
+    var b = datePart.split('-'); y = b[0]; m = b[1]; d = b[2];
+  } else {
+    return false;
+  }
+  if (String(y).length === 2) y = '20' + y;
+  return y + '-' + pad2(parseInt(m, 10)) + '-' + pad2(parseInt(d, 10)) === getTodayStr();
+}
+
+/* ---------------- 设备数据读取与统计口径（与小程序一致） ---------------- */
+// 读取设备列表：合并分片（_sharded），并兜底旧键 machines
+function loadMachines() {
+  var data = wx.getStorageSync('machineStatus') || {};
+  if (data._sharded) {
+    var list = [];
+    for (var i = 0; i < (data._shardCount || 0); i++) {
+      try {
+        var shard = wx.getStorageSync('machineStatus_shard_' + i);
+        if (shard) list = list.concat(shard);
+      } catch (e) { /* 忽略损坏分片 */ }
+    }
+    data.checkStatus = list;
+  }
+  var machines = data.checkStatus;
+  if (!Array.isArray(machines) || machines.length === 0) {
+    var old = wx.getStorageSync('machines');
+    if (Array.isArray(old)) machines = old;
+  }
+  return Array.isArray(machines) ? machines : [];
+}
+
+// 完成判定：小程序用 isChecked，PWA 用 status，两者都认
+function isMachineChecked(m) {
+  if (!m) return false;
+  if (m.isChecked === true || m.isChecked === 'true' || m.isChecked === 1) return true;
+  return m.status === 'normal' || m.status === 'warning' || m.status === 'error';
+}
+
+// 检查时间：三种字段名都兼容
+function machineCheckTime(m) {
+  return m.lastCheck || m.checkTime || m.statusTime || '';
+}
+
+// 进度分母：设置页机台总数 → 独立 totalCount 键 → 实际设备数
+function getTotalCount(machines) {
+  var ms = wx.getStorageSync('machineStatus') || {};
+  var raw = (ms.totalCount !== undefined && ms.totalCount !== null) ? ms.totalCount : wx.getStorageSync('totalCount');
+  var n = parseInt(raw, 10);
+  return (!isNaN(n) && n > 0) ? n : machines.length;
+}
+
+/* ---------------- 首页数据 ---------------- */
+function renderProgress() {
+  var settings = wx.getStorageSync('machineSettings') || {};
+  document.getElementById('projectName').textContent = settings.projectName || '呆子记录表';
+  document.getElementById('projectContent').textContent = settings.projectContent || '';
+
+  var machines = loadMachines();
+  var checked = machines.filter(isMachineChecked).length;
+  var imgCount = 0;
+  // 有照片的机台数量（不是照片张数）
+  machines.forEach(function (m) { if ((m.images || []).length > 0) imgCount++; });
+
+  var total = getTotalCount(machines);
+  var pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+  document.getElementById('checkedCount').textContent = checked;
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  var detailText = '已检查 ' + checked + ' · 未检查 ' + (total - checked);
+  // 没有任何照片时不显示照片统计
+  if (imgCount > 0) detailText += ' · 有照片 ' + imgCount + ' 台';
+  document.getElementById('progressDetailText').textContent = detailText;
+
+  // 今日完成数：今天标记过状态的数量
+  var todayChecked = machines.filter(function (m) {
+    if (!isMachineChecked(m)) return false;
+    return isTodayTime(machineCheckTime(m));
+  }).length;
+  var planBase = planCount > 0 ? planCount : total;
+  var todayPct = planBase > 0 ? Math.round((todayChecked / planBase) * 100) : 0;
+
+  document.getElementById('todayChecked').textContent = todayChecked;
+  document.getElementById('todayPlanTotal').textContent = planBase;
+  document.getElementById('todayPct').textContent = todayPct + '%';
+  document.getElementById('todayFill').style.width = todayPct + '%';
+
+  // 设置了今日计划则默认显示今日进度
+  document.getElementById('todayProgressBlock').style.display = planCount > 0 ? 'block' : 'none';
+  document.getElementById('totalProgressBlock').style.display = planCount > 0 ? 'none' : 'block';
+}
+
+/* 短按进度卡：有今日计划时在 今日/整体 间切换，否则展开明细 */
+function toggleProgressDetail() {
+  if (planCount > 0) {
+    var totalVisible = document.getElementById('totalProgressBlock').style.display !== 'none';
+    if (totalVisible) {
+      stopAutoSwitch();
+      renderProgress();
+    } else {
+      showTotalTemporarily();
+    }
+    return;
+  }
+  var box = document.getElementById('progressDetail');
+  var arrow = document.getElementById('progressArrow');
+  var open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '›' : '⌄';
+}
+
+/* 临时查看整体进度，5 秒后自动切回今日进度 */
+function showTotalTemporarily() {
+  document.getElementById('todayProgressBlock').style.display = 'none';
+  document.getElementById('totalProgressBlock').style.display = 'block';
+  var tip = document.getElementById('autoSwitchTip');
+  autoSwitchLeft = 5;
+  tip.textContent = autoSwitchLeft + '秒后返回';
+  tip.style.display = 'inline';
+  if (autoSwitchTimer) clearInterval(autoSwitchTimer);
+  autoSwitchTimer = setInterval(function () {
+    autoSwitchLeft -= 1;
+    if (autoSwitchLeft <= 0) {
+      stopAutoSwitch();
+      renderProgress();
+      return;
+    }
+    tip.textContent = autoSwitchLeft + '秒后返回';
+  }, 1000);
+}
+
+function stopAutoSwitch() {
+  if (autoSwitchTimer) { clearInterval(autoSwitchTimer); autoSwitchTimer = null; }
+  var tip = document.getElementById('autoSwitchTip');
+  tip.style.display = 'none';
+  tip.textContent = '';
+}
+
+/* ---------------- 设置今日计划弹窗 ---------------- */
+function openPlanModal() {
+  var cur = planCount || 0;
+  document.getElementById('planTitle').textContent = '设置今日计划';
+  document.getElementById('planHint').textContent = cur > 0
+    ? ('当前计划 ' + cur + '，输入新数量修改，输0关闭')
+    : '请输入今日计划数量';
+  var input = document.getElementById('planInput');
+  input.value = '';
+  openMask('planMask');
+  setTimeout(function () { input.focus(); }, 100);
+}
+
+function confirmPlan() {
+  var val = (document.getElementById('planInput').value || '').trim();
+  if (!val) { wx.showToast({ title: '请输入数量', icon: 'none' }); return; }
+
+  // 指令 0000：关闭授权
+  if (val === '0000') { closeMask('planMask'); clearAuth(); return; }
+  // 授权码格式：直接验证授权
+  if (/^[A-Za-z]\d{10}\/\d+\/\d+/.test(val)) { closeMask('planMask'); verifyAuthCode(val); return; }
+
+  var num = parseInt(val, 10);
+  if (isNaN(num)) { wx.showToast({ title: '请输入有效数字', icon: 'none' }); return; }
+
+  var cur = planCount || 0;
+  if (num === 0) {
+    if (cur === 0) { closeMask('planMask'); return; }
+    planCount = 0;
+    wx.removeStorageSync(PLAN_COUNT_KEY);
+    wx.removeStorageSync(PLAN_DATE_KEY);
+    closeMask('planMask');
+    renderProgress();
+    recordPlanChange('关闭今日计划', 0);
+    wx.showToast({ title: '已关闭计划', icon: 'success' });
+  } else if (num > 0) {
+    if (num === cur) { wx.showToast({ title: '与当前计划相同', icon: 'none' }); return; }
+    planCount = num;
+    wx.setStorageSync(PLAN_COUNT_KEY, num);
+    wx.setStorageSync(PLAN_DATE_KEY, getTodayStr());
+    closeMask('planMask');
+    renderProgress();
+    recordPlanChange(cur > 0 ? '更改今日计划' : '开启今日计划', num);
+    wx.showToast({ title: cur > 0 ? '今日计划已更新' : '今日计划已开启', icon: 'success' });
+  } else {
+    wx.showToast({ title: '请输入大于0的数字', icon: 'none' });
+  }
+}
+
+/* 计划变更写入变更历史（deviceChangeHistory，与小程序一致） */
+function recordPlanChange(action, count) {
+  try {
+    var logs = wx.getStorageSync('deviceChangeHistory');
+    if (!Array.isArray(logs)) logs = [];
+    var now = new Date();
+    var dateStr = getTodayStr();
+    var timeStr = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+    var endDateStr = (now.getMonth() + 1) + '/' + now.getDate();
+
+    var lastPlanTime = '';
+    var lastPlanCount = 0;
+    for (var i = logs.length - 1; i >= 0; i--) {
+      var r = logs[i];
+      if (r && /计划$/.test(r.action || '') && String(r.time || '').indexOf(dateStr) === 0) {
+        lastPlanTime = r.time;
+        var mt = r.detail ? String(r.detail).match(/计划数量[：:]\s*(\d+)/) : null;
+        lastPlanCount = mt ? parseInt(mt[1], 10) : (r.planCount || 0);
+        break;
+      }
+    }
+
+    // 同一天只保留最后一次计划记录
+    logs = logs.filter(function (r) {
+      return !(r && /计划$/.test(r.action || '') && String(r.time || '').indexOf(dateStr) === 0);
+    });
+
+    var detail = (action === '关闭今日计划')
+      ? '关闭当日计划'
+      : ('计划数量：' + count + '台，' + endDateStr + ' 23:59结束');
+    var settings = wx.getStorageSync('machineSettings') || {};
+
+    logs.push({
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      machineName: '',
+      machineId: '',
+      location: settings.projectName || wx.getStorageSync('projectName') || '',
+      action: action,
+      detail: detail,
+      planCount: count,
+      lastPlanTime: lastPlanTime,
+      lastPlanCount: lastPlanCount,
+      time: dateStr + ' ' + timeStr,
+      changedAt: Date.now()
+    });
+
+    wx.setStorageSync('deviceChangeHistory', logs);
+  } catch (e) {
+    console.warn('[PWA] 记录今日计划变更失败:', e);
+  }
+}
+
+/* ---------------- 授权状态显示 ---------------- */
+function updatePermissionDisplay() {
+  var info = document.getElementById('permissionInfo');
+  var expire = getExpireTime();
+  if (!expire) { info.textContent = ''; return; }
+  var remaining = expire - Date.now();
+  if (remaining <= 0) {
+    wx.removeStorageSync('appPermissionExpireTime');
+    wx.removeStorageSync('appPasswordVerified');
+    info.textContent = '';
+    return;
+  }
+  var days = Math.floor(remaining / DAY);
+  var hours = Math.floor((remaining % DAY) / 3600000);
+  var minutes = Math.floor((remaining % 3600000) / 60000);
+  var seconds = Math.floor((remaining % 60000) / 1000);
+  var text;
+  if (days > 0) text = days + '天';
+  else if (hours > 0) text = hours + '小时' + minutes + '分钟';
+  else if (minutes > 0) text = minutes + '分钟' + seconds + '秒';
+  else text = seconds + '秒';
+  info.textContent = '授权剩余：' + text;
+}
+
+/* 按剩余时长智能刷新（远则每天/每小时，近则每分钟/每秒） */
+function schedulePermissionTimer() {
+  if (permissionTimer) { clearTimeout(permissionTimer); permissionTimer = null; }
+  var expire = getExpireTime();
+  if (!expire || expire <= Date.now()) return;
+
+  function next() {
+    var remaining = expire - Date.now();
+    if (remaining <= 0) { permissionTimer = null; updatePermissionDisplay(); return; }
+    updatePermissionDisplay();
+    var now = new Date();
+    var delay;
+    if (remaining > 2 * DAY) {
+      delay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+    } else if (remaining > 3600000) {
+      delay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1).getTime() - now.getTime();
+    } else if (remaining > 600000) {
+      delay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1).getTime() - now.getTime();
+    } else {
+      delay = 1000;
+    }
+    permissionTimer = setTimeout(next, delay);
+  }
+  next();
+}
+
+/* ---------------- 用户名称 ---------------- */
+function renderUserName() {
+  var name = wx.getStorageSync('daziButtonName') || wx.getStorageSync('userName') || '';
+  document.getElementById('userBtn').textContent = name || '呆子';
+  var cur = document.getElementById('currentUser');
+  if (name) {
+    cur.textContent = '当前用户: ' + name;
+    cur.style.display = 'block';
+  } else {
+    cur.textContent = '';
+    cur.style.display = 'none';
+  }
+}
+
+function onUserBtnClick() {
+  wx.showToast({ title: '请长按更改用户名称', icon: 'none' });
+}
+
+function openUserModal() {
+  document.getElementById('userInput').value = wx.getStorageSync('daziButtonName') || '';
+  openMask('userMask');
+  setTimeout(function () { document.getElementById('userInput').focus(); }, 100);
+}
+
+function confirmUserName() {
+  var val = (document.getElementById('userInput').value || '').trim();
+  if (!val) return;
+  if (val === '0000') { closeMask('userMask'); openAdminModal(); return; }
+  if (val.charAt(0) === 'a') {
+    wx.showToast({ title: '用户名不能以a开头', icon: 'none' });
+    return;
+  }
+  wx.setStorageSync('userName', val);
+  wx.setStorageSync('daziButtonName', val);
+  closeMask('userMask');
+  renderUserName();
+  wx.showToast({ title: '用户名称已设置', icon: 'success' });
+}
+
+function onCurrentUserTap() {
+  wx.showToast({ title: '请在设备详情中添加照片', icon: 'none' });
+}
+
+/* ---------------- 管理员验证 / 生成临时密码 ---------------- */
+function openAdminModal() {
+  document.getElementById('adminInput').value = '';
+  openMask('adminMask');
+  setTimeout(function () { document.getElementById('adminInput').focus(); }, 100);
+}
+
+function confirmAdminPassword() {
+  var val = document.getElementById('adminInput').value || '';
+  var adminPassword = wx.getStorageSync('adminPassword') || 'admin123';
+  if (val === adminPassword) {
+    closeMask('adminMask');
+    generatePasswordList();
+  } else {
+    wx.showToast({ title: '密码错误', icon: 'none' });
+  }
+}
+
+function generatePasswordList() {
+  var now = Date.now();
+  var timestampStr = now.toString();
+  var options = [
+    { label: '3分钟试用', typeCode: 1, value: 3 },
+    { label: '1天', typeCode: 2, value: 1 },
+    { label: '30天', typeCode: 2, value: 30 },
+    { label: '180天', typeCode: 2, value: 180 },
+    { label: '360天', typeCode: 2, value: 360 }
+  ];
+  var letterPrefix = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+  var html = options.map(function (opt) {
+    var randomLetter = letterPrefix.charAt(Math.floor(Math.random() * letterPrefix.length));
+    var randomNum = Math.floor(Math.random() * 9000) + 1000;
+    var timestampPart = randomLetter + timestampStr.substring(timestampStr.length - 6) + randomNum;
+
+    var expireTime = now;
+    if (opt.typeCode === 1) {
+      expireTime += opt.value * 60 * 1000;
+    } else {
+      var d = new Date(now + opt.value * DAY);
+      d.setHours(23, 59, 59, 999);
+      expireTime = d.getTime();
+    }
+    var expireOffset = Math.round((expireTime - now) / 60000);
+    var pwd = timestampPart + '/' + opt.typeCode + '/' + opt.value + '/' + expireOffset;
+
+    return '<div class="password-item" data-pwd="' + pwd + '" onclick="copyPassword(this)">' +
+      '<div class="password-item-label">' + opt.label + '</div>' +
+      '<div class="password-item-value">' + pwd + '</div>' +
+      '<div class="password-item-expire">有效期至：' + formatTime(expireTime) + '</div>' +
+      '<div class="password-item-tip">点击复制</div>' +
+      '</div>';
+  }).join('');
+
+  document.getElementById('pwdList').innerHTML = html;
+  openMask('pwdMask');
+}
+
+function copyPassword(el) {
+  var pwd = el.getAttribute('data-pwd');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pwd).then(function () {
+      wx.showToast({ title: '密码已复制', icon: 'success' });
+    }, fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+  function fallbackCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = pwd;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); wx.showToast({ title: '密码已复制', icon: 'success' }); }
+    catch (e) { wx.showToast({ title: '复制失败', icon: 'none' }); }
+    ta.remove();
+  }
+}
+
+/* ---------------- 授权码 ---------------- */
+function openAuthModal() {
+  document.getElementById('authInput').value = '';
+  openMask('authMask');
+  setTimeout(function () { document.getElementById('authInput').focus(); }, 100);
+}
+
+function confirmAuthInput() {
+  var val = (document.getElementById('authInput').value || '').trim();
+  if (!val) { wx.showToast({ title: '请输入授权码', icon: 'none' }); return; }
+  if (val === '0000') { closeMask('authMask'); clearAuth(); return; }
+  verifyAuthCode(val);
+}
+
+/* 关闭授权 */
+function clearAuth() {
+  wx.removeStorageSync('videoPermission');
+  wx.removeStorageSync('appPermissionExpireTime');
+  wx.removeStorageSync('appPasswordVerified');
+  wx.removeStorageSync('lastAuthCode');
+  if (permissionTimer) { clearTimeout(permissionTimer); permissionTimer = null; }
+  updatePermissionDisplay();
+  wx.showToast({ title: '授权已关闭', icon: 'success' });
+}
+
+function verifyAuthCode(password) {
+  var now = Date.now();
+  if (!/^[A-Za-z]\d{10}\/\d+\/\d+\/\d+/.test(password)) {
+    wx.showToast({ title: '请输入有效授权码', icon: 'none' });
+    return;
+  }
+  var parts = password.split('/');
+  var timestampPart = parts[0];
+  var typeCode = parseInt(parts[1]);
+  var expireValue = parts[2];
+  var expireSuffix = parts[3];
+  var expireType = { 1: 'minutes', 2: 'days', 3: 'date' }[typeCode];
+  if (!expireType) { wx.showToast({ title: '密码格式错误', icon: 'none' }); return; }
+
+  // 防重复使用
+  var usedCodes = wx.getStorageSync('usedAuthCodes') || [];
+  if (usedCodes.indexOf(password) >= 0) {
+    wx.showToast({ title: '授权码已被使用，请勿重复使用', icon: 'none' });
+    return;
+  }
+
+  // 解析生成时间（10 分钟内有效）
+  var m = timestampPart.match(/^[A-Za-z](\d{10})$/);
+  if (!m) { wx.showToast({ title: '密码格式错误', icon: 'none' }); return; }
+  var digits = m[1].substring(0, 6);
+  var nowStr = now.toString();
+  var prefix = nowStr.substring(0, nowStr.length - 6);
+  var timestamp = parseInt(prefix + digits);
+  if (Math.abs(now - timestamp) > 10 * 60 * 1000) {
+    var prevPrefix = (now - 60000).toString().substring(0, nowStr.length - 6);
+    timestamp = parseInt(prevPrefix + digits);
+  }
+  if (Math.abs(now - timestamp) > 10 * 60 * 1000) {
+    wx.showToast({ title: '密码已过期，请获取新密码', icon: 'none' });
+    return;
+  }
+
+  var expireOffset = parseInt(expireSuffix);
+  if (isNaN(expireOffset) || expireOffset <= 0) {
+    wx.showToast({ title: '授权码格式错误', icon: 'none' });
+    return;
+  }
+
+  var expireTime;
+  if (expireType === 'minutes') {
+    expireValue = parseInt(expireValue);
+    if (isNaN(expireValue) || expireValue <= 0 || expireValue > 10) {
+      wx.showToast({ title: '密码格式错误', icon: 'none' });
+      return;
+    }
+    expireTime = now + expireValue * 60 * 1000;
+  } else if (expireType === 'days') {
+    expireValue = parseInt(expireValue);
+    if ([1, 30, 180, 360].indexOf(expireValue) < 0) {
+      wx.showToast({ title: '密码格式错误', icon: 'none' });
+      return;
+    }
+    // 校验内置偏移，允许 1 天误差（到期日对齐 23:59:59）
+    if (Math.abs(expireOffset - expireValue * 24 * 60) > 1440) {
+      wx.showToast({ title: '授权码已被篡改', icon: 'none' });
+      return;
+    }
+    var d = new Date(timestamp + expireValue * DAY);
+    d.setHours(23, 59, 59, 999);
+    expireTime = d.getTime();
+  } else {
+    wx.showToast({ title: '授权码类型错误', icon: 'none' });
+    return;
+  }
+
+  // 授权码自身是否已过期
+  if (now >= timestamp + expireOffset * 60 * 1000) {
+    wx.showToast({ title: '授权码已过期，请获取新密码', icon: 'none' });
+    return;
+  }
+
+  wx.setStorageSync('videoPermission', {
+    status: 'approved',
+    approveTime: new Date().toISOString(),
+    expireType: expireType,
+    expireValue: expireValue,
+    password: password
+  });
+  wx.setStorageSync('appPermissionExpireTime', expireTime);
+  wx.setStorageSync('appPasswordVerified', true);
+  usedCodes.push(password);
+  wx.setStorageSync('usedAuthCodes', usedCodes);
+
+  closeMask('authMask');
+  updatePermissionDisplay();
+  schedulePermissionTimer();
+  if (wx.__updateTabBarVisibility) wx.__updateTabBarVisibility();
+
+  var expireText = expireType === 'minutes' ? expireValue + '分钟' : expireValue + '天';
+  wx.showToast({ title: '✅ 授权成功：' + expireText + '（至 ' + formatTime(expireTime) + '）', icon: 'none', duration: 2500 });
+}
+
+/* ---------------- 开始按钮（点击进入 / 3分钟试用 / 长按输入授权码） ---------------- */
+function hasValidAuth() {
+  var verified = wx.getStorageSync('appPasswordVerified');
+  var expire = getExpireTime();
+  return !!verified && (!expire || expire > Date.now());
+}
+
+function onStartTap() {
+  if (hasValidAuth()) { location.href = './work.html'; return; }
+
+  // 3 分钟试用：每个自然小时限一次
+  var now = new Date();
+  var hourKey = now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + '-' + now.getHours();
+  if ((wx.getStorageSync('lastTrialHour') || '') === hourKey) {
+    openAuthModal();
+    return;
+  }
+  wx.setStorageSync('appPasswordVerified', true);
+  wx.setStorageSync('appPermissionExpireTime', Date.now() + 3 * 60 * 1000);
+  wx.setStorageSync('lastTrialHour', hourKey);
+  updatePermissionDisplay();
+  schedulePermissionTimer();
+  if (wx.__updateTabBarVisibility) wx.__updateTabBarVisibility();
+  wx.showToast({ title: '3分钟试用模式', icon: 'none' });
+  location.href = './work.html';
+}
+
+/* 长按识别（PC 右键 / 移动端 500ms 长按） */
+function bindLongPress(el, onLong, onShort) {
+  var timer = null;
+  var longFired = false;
+  function start() {
+    longFired = false;
+    timer = setTimeout(function () { longFired = true; onLong(); }, 500);
+  }
+  function end() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', function () {
+    end();
+    if (!longFired && onShort) onShort();
+  });
+  el.addEventListener('pointerleave', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+
+bindLongPress(document.getElementById('startBtn'), function () { openAuthModal(); }, onStartTap);
+bindLongPress(document.getElementById('userBtn'), openUserModal, onUserBtnClick);
+// 进度卡：长按设置今日计划，短按切换今日/整体进度
+bindLongPress(document.getElementById('progressCard'), openPlanModal, toggleProgressDetail);
+
+/* ---------------- 隐私政策门禁（读到底 + 3 秒倒计时） ---------------- */
+var privacyScrolled = false;
+var privacyCountdownDone = false;
+var privacyCountdownTimer = null;
+
+function isPrivacyAgreed() {
+  var v = wx.getStorageSync('privacyAgreed');
+  return v === true || v === 'true';
+}
+
+function checkPrivacyAgreement() {
+  if (isPrivacyAgreed()) return;
+  document.getElementById('privacyModal').style.display = 'flex';
+
+  var body = document.getElementById('privacyBody');
+  body.addEventListener('scroll', function () {
+    if (privacyScrolled) return;
+    if (body.scrollTop + body.clientHeight >= body.scrollHeight - 12) {
+      privacyScrolled = true;
+      startPrivacyCountdown();
+    }
+  });
+  // 内容不满一屏时直接视为读完
+  setTimeout(function () {
+    if (!privacyScrolled && body.scrollHeight <= body.clientHeight + 4) {
+      privacyScrolled = true;
+      startPrivacyCountdown();
+    }
+  }, 300);
+}
+
+function startPrivacyCountdown() {
+  if (privacyCountdownDone || privacyCountdownTimer) return;
+  var left = 3;
+  var tip = document.getElementById('privacyCountdown');
+  tip.style.display = '';
+  document.getElementById('countdownNumber').textContent = left;
+  privacyCountdownTimer = setInterval(function () {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(privacyCountdownTimer);
+      privacyCountdownTimer = null;
+      privacyCountdownDone = true;
+      document.getElementById('privacyCountdown').style.display = 'none';
+      document.getElementById('privacyCountdownComplete').style.display = '';
+      updatePrivacyAgreeBtn();
+      return;
+    }
+    document.getElementById('countdownNumber').textContent = left;
+  }, 1000);
+}
+
+function updatePrivacyAgreeBtn() {
+  var btn = document.getElementById('privacyAgreeBtn');
+  var ok = privacyScrolled && privacyCountdownDone;
+  btn.classList.toggle('disabled', !ok);
+  btn.textContent = ok ? '同意' : '请先阅读完';
+}
+
+function agreePrivacy() {
+  if (!(privacyScrolled && privacyCountdownDone)) {
+    wx.showToast({ title: '请先阅读完隐私政策', icon: 'none' });
+    return;
+  }
+  wx.setStorageSync('privacyAgreed', 'true');
+  document.getElementById('privacyModal').style.display = 'none';
+  if (wx.__updateTabBarVisibility) wx.__updateTabBarVisibility();
+  wx.showToast({ title: '已同意', icon: 'success' });
+}
+
+function rejectPrivacy() {
+  // 浏览器无法退出应用，保持弹窗并提示
+  wx.showToast({ title: '需同意隐私政策后才能使用', icon: 'none' });
+}
+
+/* ---------------- 启动 ---------------- */
+planCount = loadPlanCount();
+renderProgress();
+renderUserName();
+updatePermissionDisplay();
+schedulePermissionTimer();
+checkPrivacyAgreement();
+
+// 从工作页返回时刷新进度（含 bfcache 恢复）
+window.addEventListener('pageshow', function () {
+  planCount = loadPlanCount();
+  renderProgress();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2077 @@
+.report-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0.2rem;
+  box-sizing: border-box;
+  font-size: 0.28rem;
+  color: #333;
+  background-color: #f8f8f8;
+  /* 临时基础样式 - 确保容器可见 */
+  border: 0.01rem solid #ddd;
+}
+
+
+
+/* 整合样式 - 确保所有主要区域都可见 */
+.report-container .device-list-section,
+.report-container .device-list,
+.report-container .report-content-section {
+  /* 临时边框，帮助可视化布局 */
+  border: 0.01rem solid rgba(0,0,0,0.1);
+}
+
+/* 确保配置区域可见 - 竖排布局 */
+.config-section {
+  background-color: white;
+  padding: 0.2rem;
+  margin-bottom: 0.2rem;
+  border-radius: 0.1rem;
+  min-height: 1.0rem;
+  display: block;
+  /* 竖排布局优化 */
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 确保报表内容区域可见 */
+.report-content-section {
+  background-color: white;
+  padding: 0.2rem;
+  margin-bottom: 0.2rem;
+  border-radius: 0.1rem;
+  /* 临时样式 */
+  min-height: 3.0rem;
+  display: block;
+}
+
+/* 确保设备列表可见 */
+.device-list {
+  /* 临时样式 */
+  display: block;
+}
+
+/* 确保列表项可见 */
+.device-item {
+  padding: 0.2rem;
+  margin-bottom: 0.1rem;
+  background-color: #f9f9f9;
+  border-radius: 0.1rem;
+  /* 临时样式 */
+  min-height: 1.5rem;
+  display: block;
+}
+
+/* 确保加载状态明显 */
+.loading {
+  /* 已有样式保持，只增强可见性 */
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 0.02rem solid #07c160;
+}
+
+/* 确保导出弹窗强制显示（临时） */
+/* .export-modal { */
+/*   display: flex !important; */
+/* } */
+
+/* 确保数据为空时的提示可见 */
+.empty-state {
+  color: #666;
+  font-size: 0.32rem;
+  background-color: #f0f0f0;
+  padding: 0.4rem;
+  border-radius: 0.1rem;
+  /* 临时样式 */
+  min-height: 2.0rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 导出选项弹窗样式 */
+.export-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.export-modal .modal-content {
+  background-color: white;
+  width: 80%;
+  max-width: 5.0rem;
+  border-radius: 0.16rem;
+  padding: 0.3rem;
+}
+
+.export-modal .modal-title {
+  font-size: 0.32rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.export-modal .option {
+  padding: 0.2rem 0;
+  border-bottom: 0.01rem solid #eee;
+  font-size: 0.28rem;
+}
+
+.export-modal .option:last-child {
+  border-bottom: none;
+}
+
+.export-modal .cancel-btn {
+  margin-top: 0.3rem;
+  padding: 0.2rem;
+  text-align: center;
+  color: #07c160;
+  font-size: 0.32rem;
+}
+
+/* 无数据提示样式 */
+.empty-state {
+  margin-top: 0.5rem;
+  text-align: center;
+  padding: 0.5rem;
+  color: #999;
+  font-size: 0.28rem;
+}
+
+/* 加载状态样式 */
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 999;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem;
+  border-radius: 0.12rem;
+  margin-bottom: 0.3rem;
+  background-color: #fff;
+}
+
+.back-btn {
+  font-size: 0.36rem;
+  color: #1976d2;
+}
+
+.page-title {
+  font-size: 0.32rem;
+  font-weight: 600;
+}
+
+.export-btn {
+  font-size: 0.28rem;
+  color: #07c160;
+  padding: 0.1rem 0.2rem;
+  background-color: #f0f9ff;
+  border-radius: 0.08rem;
+}
+
+/* 导航键说明样式 */
+.navigation-guide {
+  background-color: #fff;
+  padding: 0.2rem;
+  border-radius: 0.12rem;
+  margin-bottom: 0.3rem;
+  border-left: 0.06rem solid #1976d2;
+}
+
+.guide-text {
+  display: block;
+}
+
+/* 设备状态样式 */
+.status-normal {
+  color: #07c160;
+  font-weight: bold;
+}
+
+.status-warning {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.status-unknown {
+  color: #999;
+}
+
+.guide-text {
+  font-size: 0.28rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 0.12rem;
+}
+
+.guide-text:last-child {
+  margin-bottom: 0;
+}
+
+.config-section {
+  background-color: #fff;
+  padding: 0.25rem;
+  border-radius: 0.12rem;
+  margin-bottom: 0.3rem;
+}
+
+.config-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+}
+
+.config-label {
+  width: 100%;
+  margin-bottom: 0.1rem;
+}
+
+.config-row:last-child {
+  margin-bottom: 0;
+}
+
+.config-label {
+  width: 1.5rem;
+  font-size: 0.28rem;
+  color: #666;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.15rem;
+  font-size: 0.28rem;
+}
+
+.date-picker {
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 0.15rem 0.2rem;
+  border-radius: 0.08rem;
+  font-size: 0.28rem;
+}
+
+.refresh-btn {
+  margin-top: 0.2rem;
+  background-color: #1976d2;
+  color: #fff;
+  font-size: 0.28rem;
+}
+
+/* 状态统计区域样式 */
+.status-section {
+  background-color: #fff;
+  padding: 0.25rem;
+  border-radius: 0.12rem;
+  margin-bottom: 0.3rem;
+}
+
+.status-title {
+  font-size: 0.3rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.2rem;
+}
+
+.status-cards {
+  display: flex;
+  justify-content: space-between;
+}
+
+.status-card {
+  flex: 1;
+  text-align: center;
+  padding: 0.2rem;
+  border-radius: 0.1rem;
+  margin-right: 0.15rem;
+}
+
+.status-card:last-child {
+  margin-right: 0;
+}
+
+.status-card.normal {
+  background-color: #e8f5e9;
+}
+
+.status-card.warning {
+  background-color: #fff8e1;
+}
+
+.status-card.error {
+  background-color: #ffebee;
+}
+
+.status-num {
+  display: block;
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.status-card.normal .status-num {
+  color: #2e7d32;
+}
+
+.status-card.warning .status-num {
+  color: #f57c00;
+}
+
+.status-card.error .status-num {
+  color: #c62828;
+}
+
+.status-name {
+  display: block;
+  font-size: 0.24rem;
+  color: #666;
+  margin-top: 0.05rem;
+}
+
+.export-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 0.12rem;
+  padding: 0.3rem;
+  width: 80%;
+  max-width: 5.0rem;
+}
+
+.modal-title {
+  font-size: 0.32rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.export-option {
+  margin: 0.1rem 0;
+  font-size: 0.32rem;
+  color: #333;
+  background-color: #f5f5f5;
+  border-radius: 0.06rem;
+}
+
+/* 简略报表预览样式 */
+.simple-report-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.preview-content {
+  position: relative;
+  width: 85%;
+  max-height: 80vh;
+  background-color: #fff;
+  border-radius: 0.12rem;
+  box-shadow: 0 0.04rem 0.2rem rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  padding: 0.3rem;
+  border-bottom: 0.02rem solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+}
+
+.preview-header-right {
+  display: flex;
+  align-items: center;
+  margin-left: 0.2rem;
+}
+
+.area-toggle-btn {
+  display: flex;
+  align-items: center;
+  font-size: 0.24rem;
+  padding: 0.1rem 0.2rem;
+  background-color: #07c160;
+  color: white;
+  border-radius: 0.08rem;
+  margin-right: 0.15rem;
+}
+
+.area-toggle-btn:active {
+  background-color: #06ad56;
+}
+
+.area-toggle-text {
+  font-weight: bold;
+}
+
+.area-toggle-arrow {
+  font-size: 0.2rem;
+  margin-left: 0.08rem;
+}
+
+.area-select-list {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.2rem;
+}
+
+.area-select-item {
+  width: 30%;
+  background-color: #f5f5f5;
+  border-radius: 0.08rem;
+  padding: 0.2rem 0.1rem;
+  margin: 0 1.5% 0.15rem 1.5%;
+  text-align: center;
+  border: 0.02rem solid transparent;
+}
+
+.area-select-item:active {
+  background-color: #e8e8e8;
+}
+
+.area-select-item.active {
+  background-color: #07c160;
+  color: white;
+}
+
+.area-select-name {
+  font-size: 0.28rem;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 0.08rem;
+}
+
+.area-select-item.active .area-select-name {
+  color: white;
+}
+
+.area-select-count {
+  font-size: 0.24rem;
+  color: #666;
+}
+
+.area-select-item.active .area-select-count {
+  color: white;
+}
+
+.area-select-empty {
+  text-align: center;
+  color: #999;
+  padding: 0.4rem;
+  width: 100%;
+}
+
+.remark-area {
+  display: flex;
+  align-items: center;
+}
+
+.preview-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.preview-close {
+  font-size: 0.5rem;
+  color: #999;
+  line-height: 1;
+  padding: 0 0.1rem;
+}
+
+.preview-close:active {
+  color: #666;
+}
+
+/* 旧版预览弹窗样式 - 已废弃 */
+.preview-body-old {
+  flex: 1;
+  padding: 0.3rem;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
+
+.preview-text {
+  font-size: 0.28rem;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace, 'Courier New', 'Lucida Console', 'Consolas', sans-serif;
+}
+
+.preview-footer {
+  padding: 0.3rem;
+  border-top: 0.02rem solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+}
+
+.preview-button {
+  flex: 1;
+  margin: 0;
+  font-size: 0.32rem;
+  min-width: 1.5rem;
+}
+
+.preview-button.primary {
+  color: #07c160;
+  border-color: #07c160;
+}
+
+.preview-copy-btn,
+.preview-share-btn,
+.preview-close-btn {
+  flex: 1;
+  margin: 0;
+  font-size: 0.28rem;
+  padding: 0.15rem 0.2rem;
+}
+
+.preview-share-btn {
+  color: #07c160;
+}
+
+.hidden-canvas {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+}
+
+.preview-button.primary:active {
+  background-color: rgba(7, 193, 96, 0.1);
+}
+
+.export-option.share-option {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #666;
+  font-size: 0.28rem;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  padding: 1.0rem 0;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.empty-text {
+  font-size: 0.28rem;
+}
+
+.report-summary {
+  background-color: #fff;
+  padding: 0.25rem;
+  border-radius: 0.12rem;
+  margin-bottom: 0.3rem;
+}
+
+/* 设备状态统计样式 */
+.status-summary-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.status-summary-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.status-summary-item {
+  flex: 1;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.status-summary-item.normal {
+  background-color: #e6f7e9;
+  border: 1px solid #95de64;
+}
+
+.status-summary-item.warning {
+  background-color: #fffbe6;
+  border: 1px solid #ffd591;
+}
+
+.status-summary-item.error {
+  background-color: #fff1f0;
+  border: 1px solid #ff7875;
+}
+
+.status-label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.status-value {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.status-summary-item.normal .status-value {
+  color: #52c41a;
+}
+
+.status-summary-item.warning .status-value {
+  color: #faad14;
+}
+
+.status-summary-item.error .status-value {
+  color: #f5222d;
+}
+
+/* 状态箭头指示 */
+.status-arrow {
+  float: right;
+  font-size: 0.24rem;
+  color: #999;
+  margin-top: 0.04rem;
+}
+
+/* 状态筛选列表样式 */
+.status-filter-section {
+  background-color: #fff;
+  margin: 0.2rem;
+  padding: 0.2rem;
+  border-radius: 0.12rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.1);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.2rem;
+  border-bottom: 0.02rem solid #e0e0e0;
+  margin-bottom: 0.2rem;
+}
+
+.filter-title {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.filter-close {
+  font-size: 0.48rem;
+  color: #999;
+  line-height: 1;
+  padding: 0 0.1rem;
+}
+
+.filter-list {
+  max-height: 6.0rem;
+  overflow-y: auto;
+}
+
+.filter-item {
+  padding: 0.15rem;
+  background-color: #f5f5f5;
+  border-radius: 0.08rem;
+  margin-bottom: 0.15rem;
+}
+
+.filter-item:last-child {
+  margin-bottom: 0;
+}
+
+.filter-machine {
+  display: block;
+  font-size: 0.3rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+
+.filter-location {
+  display: block;
+  font-size: 0.26rem;
+  color: #666;
+  margin-bottom: 0.04rem;
+}
+
+.filter-time {
+  display: block;
+  font-size: 0.26rem;
+  color: #4CAF50;
+}
+
+.empty-filter {
+  text-align: center;
+  padding: 0.4rem;
+  color: #999;
+  font-size: 0.28rem;
+}
+
+.summary-title {
+  font-size: 0.32rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  text-align: center;
+  color: #1976d2;
+}
+
+.summary-row {
+  display: flex;
+  flex-direction: column;
+  padding: 0.15rem 0;
+  border-bottom: 0.01rem solid #f0f0f0;
+}
+
+.summary-label {
+  margin-bottom: 0.05rem;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  color: #666;
+}
+
+.summary-value {
+  font-weight: 500;
+}
+
+.summary-value.success {
+  color: #07c160;
+}
+
+.summary-value.warning {
+  color: #ff9800;
+}
+
+.completion-section {
+  margin: 0.2rem;
+  padding: 0.2rem;
+  background-color: #f9f9f9;
+  border-radius: 0.1rem;
+}
+
+.completion-group {
+  margin-bottom: 0.3rem;
+  padding: 0.2rem;
+  background-color: #fff;
+  border-radius: 0.08rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.1);
+}
+
+.completion-group:last-child {
+  margin-bottom: 0;
+}
+
+.completion-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 0.02rem solid #e0e0e0;
+}
+
+.completion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.completion-item {
+  padding: 0.15rem;
+  background-color: #f5f5f5;
+  border-radius: 0.06rem;
+}
+
+.completion-machine {
+  display: block;
+  font-size: 0.32rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+
+.completion-location {
+  display: block;
+  font-size: 0.28rem;
+  color: #666;
+  margin-bottom: 0.04rem;
+}
+
+.completion-time {
+  display: block;
+  font-size: 0.28rem;
+  color: #4CAF50;
+}
+
+.statistics-section {
+  margin: 0.2rem;
+  padding: 0.2rem;
+  background-color: #f9f9f9;
+  border-radius: 0.1rem;
+}
+
+.location-stats {
+  margin: 0.2rem 0;
+  padding: 0.2rem;
+  background: #f8f8f8;
+  border-radius: 0.08rem;
+}
+
+.location-header {
+  font-size: 0.36rem;
+  font-weight: bold;
+  margin-bottom: 0.16rem;
+  color: #333;
+}
+
+.location-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.stat-item {
+  padding: 0.08rem 0.16rem;
+  background: #fff;
+  border-radius: 0.06rem;
+  font-size: 0.28rem;
+  color: #666;
+}
+
+.device-list-section {
+  margin-top: 0.2rem;
+  padding: 0 0.3rem 0.3rem;
+}
+
+/* 已点检机台列表样式 */
+.checked-machines-section {
+  margin-bottom: 0.4rem;
+  padding: 0.2rem;
+  background-color: #f8f8f8;
+  border-radius: 0.1rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.1);
+}
+
+.checked-machines-section .section-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.1rem;
+  border-bottom: 0.02rem solid #ddd;
+}
+
+.checked-machines-section .device-item {
+  margin-bottom: 0.2rem;
+  padding: 0.2rem;
+  background-color: #fff;
+  border-radius: 0.08rem;
+  border-left: 0.08rem solid #07c160;
+}
+
+.checked-machines-section .device-item.has-error {
+  border-left-color: #e64340;
+}
+
+.device-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.1rem;
+}
+
+.device-check-mark {
+  font-size: 0.4rem;
+  margin-right: 0.1rem;
+}
+
+.device-name-main {
+  font-size: 0.34rem;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.error-remark {
+  color: #e64340;
+  font-weight: bold;
+  font-size: 0.3rem;
+  margin-top: 0.1rem;
+  padding: 0.1rem;
+  background-color: #fff2f0;
+  border-radius: 0.06rem;
+}
+
+.info-item {
+  display: block;
+  font-size: 0.28rem;
+  color: #666;
+  margin-bottom: 0.08rem;
+}
+
+.section-title {
+  font-size: 0.3rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  padding-left: 0.1rem;
+  border-left: 0.05rem solid #1976d2;
+}
+
+.device-list {
+  background-color: #fff;
+  border-radius: 0.12rem;
+  overflow: hidden;
+}
+
+.device-item {
+  padding: 0.25rem;
+  border-bottom: 0.01rem solid #f0f0f0;
+}
+
+.device-item:last-child {
+  border-bottom: none;
+}
+
+.device-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.15rem;
+}
+
+.device-number {
+  font-weight: 600;
+  margin-bottom: 0.05rem;
+  color: #1976d2;
+}
+
+.device-name {
+  color: #666;
+  font-size: 0.26rem;
+}
+
+.device-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.15rem;
+}
+
+.info-item {
+  margin-bottom: 0.1rem;
+  font-size: 0.26rem;
+  color: #666;
+  display: block;
+}
+
+.device-remark {
+  background-color: #f9f9f9;
+  padding: 0.15rem;
+  border-radius: 0.08rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.remark-label {
+  margin-bottom: 0.05rem;
+  display: block;
+}
+
+.remark-label {
+  font-weight: 500;
+  margin-right: 0.1rem;
+}
+
+.remark-content {
+  color: #666;
+  font-size: 0.26rem;
+}
+
+.report-content-section {
+  margin-bottom: 0.3rem;
+}
+
+.content-box {
+  background-color: #fff;
+  padding: 0.25rem;
+  border-radius: 0.12rem;
+  max-height: 6.0rem;
+  overflow-y: auto;
+}
+
+.content-text {
+  font-size: 0.26rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+/* 垂直布局样式 */
+.device-header-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.15rem;
+  padding-bottom: 0.1rem;
+  border-bottom: 0.01rem solid #e0e0e0;
+}
+
+.device-name-vertical {
+  color: #333;
+  font-size: 0.28rem;
+  font-weight: 500;
+  margin-top: 0.08rem;
+}
+
+.device-info-vertical {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.15rem;
+}
+
+.info-item-vertical {
+  margin-bottom: 0.12rem;
+  font-size: 0.28rem;
+  color: #666;
+  display: block;
+  padding: 0.05rem 0;
+  border-bottom: 0.01rem solid #f5f5f5;
+}
+
+.info-item-vertical:last-child {
+  border-bottom: none;
+}
+
+.device-remark-vertical {
+  background-color: #f9f9f9;
+  padding: 0.15rem;
+  border-radius: 0.08rem;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.1rem;
+}
+
+.remark-label-vertical {
+  margin-bottom: 0.08rem;
+  display: block;
+  font-weight: 500;
+  color: #333;
+}
+
+.remark-content-vertical {
+  color: #666;
+  font-size: 0.26rem;
+  line-height: 1.5;
+  padding: 0.05rem 0;
+}
+
+/* 简略报表预览弹窗样式 */
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-modal-content {
+  position: relative;
+  width: 90%;
+  max-height: 80vh;
+  background-color: #fff !important;
+  border-radius: 0.16rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+}
+
+.preview-header {
+  padding: 0.3rem;
+  background-color: #fff;
+  border-bottom: 0.02rem solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-title {
+  font-size: 0.34rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.preview-close {
+  font-size: 0.56rem;
+  color: #999;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.preview-body {
+  flex: 1;
+  padding: 0.3rem;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.preview-text-container {
+  padding: 0.1rem;
+  background-color: #fff;
+}
+
+.preview-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.26rem;
+  color: #333;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  word-wrap: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.preview-modal-content .preview-footer {
+  padding: 0.2rem 0.3rem;
+  border-top: 0.02rem solid #f0f0f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.preview-modal-content .preview-footer > button {
+  flex: 1 1 1.4rem;
+  white-space: nowrap;
+}
+
+.preview-modal-content .preview-copy-btn,
+.preview-modal-content .preview-save-btn,
+.preview-modal-content .preview-close-btn {
+  flex: 1;
+  height: 0.8rem;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-modal-content .preview-copy-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: #fff;
+}
+
+.preview-modal-content .preview-save-btn {
+  background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+  color: #fff;
+}
+
+.preview-modal-content .preview-close-btn {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+/* 状态筛选弹窗样式 */
+.status-filter-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.filter-modal-content {
+  position: relative;
+  width: 100%;
+  max-height: 70vh;
+  background-color: #fff;
+  border-radius: 0.2rem 0.2rem 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-header {
+  padding: 0.3rem;
+  border-bottom: 0.02rem solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-title {
+  font-size: 0.34rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.filter-close {
+  font-size: 0.56rem;
+  color: #999;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.filter-body {
+  flex: 1;
+  padding: 0.2rem;
+  overflow-y: auto;
+}
+
+.filter-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.filter-device-item {
+  padding: 0.25rem;
+  background-color: #f9f9f9;
+  border-radius: 0.12rem;
+  border-left: 0.06rem solid #1976d2;
+}
+
+.filter-device-info {
+  margin-bottom: 0.1rem;
+}
+
+.filter-device-name {
+  display: block;
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+
+.filter-device-location {
+  display: block;
+  font-size: 0.26rem;
+  color: #666;
+  margin-bottom: 0.04rem;
+}
+
+.filter-device-time {
+  display: block;
+  font-size: 0.26rem;
+  color: #4CAF50;
+}
+
+.filter-device-remark {
+  display: block;
+  font-size: 0.26rem;
+  color: #1976d2;
+  background-color: #e3f2fd;
+  padding: 0.1rem 0.15rem;
+  border-radius: 0.08rem;
+  margin-top: 0.1rem;
+}
+
+.filter-tip {
+  display: block;
+  font-size: 0.22rem;
+  color: #999;
+  text-align: right;
+  margin-top: 0.1rem;
+}
+
+.filter-empty {
+  text-align: center;
+  padding: 1.0rem 0;
+  color: #999;
+  font-size: 0.28rem;
+}
+
+/* 状态统计弹窗样式 */
+.status-summary-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.summary-modal-content {
+  width: 90%;
+  max-height: 80vh;
+  background-color: #fff !important;
+  border-radius: 0.16rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+}
+
+.summary-modal-header {
+  padding: 0.3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff !important;
+  border-bottom: 0.02rem solid #eee;
+}
+
+.summary-modal-title {
+  font-size: 0.34rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.summary-modal-close {
+  font-size: 0.56rem;
+  color: #999;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.summary-modal-body {
+  flex: 1;
+  padding: 0.3rem;
+  overflow-y: auto;
+  background-color: #fff !important;
+}
+
+.summary-text-container {
+  padding: 0.1rem;
+  background-color: #fff !important;
+}
+
+.summary-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.26rem;
+  color: #333;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  word-wrap: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.summary-stat-item {
+  background-color: #f8f9fa;
+  border-radius: 0.12rem;
+  padding: 0.25rem;
+  text-align: center;
+}
+
+.summary-stat-value {
+  display: block;
+  font-size: 0.4rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+
+.summary-stat-value.success {
+  color: #4CAF50;
+}
+
+.summary-stat-value.warning {
+  color: #FF9800;
+}
+
+.summary-stat-label {
+  display: block;
+  font-size: 0.24rem;
+  color: #666;
+}
+
+.summary-device-section {
+  background-color: #f8f9fa;
+  border-radius: 0.12rem;
+  padding: 0.2rem;
+}
+
+.summary-device-section .section-title {
+  font-size: 0.3rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 0.02rem solid #e0e0e0;
+  border-left: none;
+  padding-left: 0;
+}
+
+.summary-device-section .device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.summary-device-section .device-item {
+  display: flex;
+  align-items: center;
+  padding: 0.15rem;
+  background-color: #fff;
+  border-radius: 0.08rem;
+}
+
+.summary-device-section .device-num {
+  font-size: 0.26rem;
+  color: #999;
+  margin-right: 0.1rem;
+  flex-shrink: 0;
+}
+
+.summary-device-section .device-name {
+  flex: 1;
+  font-size: 0.28rem;
+  color: #333;
+}
+
+.summary-device-section .device-check {
+  font-size: 0.28rem;
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.summary-device-section .device-more {
+  padding: 0.15rem;
+  text-align: center;
+  font-size: 0.26rem;
+  color: #999;
+}
+
+.summary-device-section .empty-tip {
+  padding: 0.4rem;
+  text-align: center;
+  font-size: 0.28rem;
+  color: #999;
+}
+
+.summary-modal-footer {
+  padding: 0.2rem 0.3rem;
+  border-top: 0.02rem solid #f0f0f0;
+  display: flex;
+  gap: 0.2rem;
+  background-color: #fff !important;
+}
+
+.summary-copy-btn {
+  flex: 1;
+  height: 0.8rem;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summary-close-btn {
+  flex: 1;
+  height: 0.8rem;
+  background-color: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 0.12rem;
+  font-size: 0.32rem;
+}
+
+.area-filter-section {
+  margin-top: 0.2rem;
+  padding-top: 0.2rem;
+  border-top: 0.02rem solid #eee;
+}
+
+.area-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  margin-top: 0.15rem;
+}
+
+.area-tab {
+  padding: 0.15rem 0.25rem;
+  background-color: #f5f5f5;
+  border-radius: 0.25rem;
+  font-size: 0.26rem;
+  color: #666;
+  border: 0.02rem solid transparent;
+  transition: all 0.3s;
+}
+
+.area-tab.active {
+  background-color: #fff;
+  color: #07c160;
+  border-color: #07c160;
+  font-weight: bold;
+}
+
+.selected-area-stats {
+  margin-top: 0.2rem;
+  background-color: #f8f9fa;
+  border-radius: 0.12rem;
+  padding: 0.2rem;
+}
+
+.selected-area-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.1rem 0;
+}
+
+.selected-area-label {
+  font-size: 0.26rem;
+  color: #666;
+}
+
+.selected-area-value {
+  font-size: 0.26rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.selected-area-value.success {
+  color: #07c160;
+}
+
+.selected-area-value.warning {
+  color: #ff9800;
+}
+
+/* 状态卡片点击提示 */
+.status-tip {
+  display: block;
+  font-size: 0.2rem;
+  color: #999;
+  margin-top: 0.05rem;
+}
+
+/* 不正经统计表样式 */
+.funny-section {
+  margin: 0.2rem;
+  padding: 0.2rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #f0f0ff 100%);
+  border-radius: 0.16rem;
+  border: 0.02rem solid #ffd700;
+}
+
+.funny-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.16rem;
+  margin-bottom: 0.24rem;
+}
+
+.funny-stat-item {
+  flex: 1;
+  min-width: calc(50% - 0.08rem);
+  padding: 0.16rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0.12rem;
+  text-align: center;
+  box-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.05);
+}
+
+.funny-icon {
+  font-size: 0.4rem;
+  display: block;
+  margin-bottom: 0.08rem;
+}
+
+.funny-label {
+  font-size: 0.24rem;
+  color: #888;
+  display: block;
+  margin-bottom: 0.08rem;
+}
+
+.funny-value {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+.funny-device-moods {
+  margin-top: 0.16rem;
+}
+
+.funny-subtitle {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.16rem;
+  display: block;
+}
+
+.mood-list {
+  max-height: 6.0rem;
+  overflow-y: auto;
+}
+
+.mood-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 0.16rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0.1rem;
+  margin-bottom: 0.12rem;
+  border-left: 0.06rem solid #ffa500;
+}
+
+.mood-emoji {
+  font-size: 0.36rem;
+  margin-right: 0.16rem;
+  flex-shrink: 0;
+}
+
+.mood-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.mood-header {
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.04rem;
+}
+
+.mood-device-name {
+  font-size: 0.28rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.mood-location {
+  font-size: 0.24rem;
+  color: #1565c0;
+}
+
+.mood-text {
+  font-size: 0.26rem;
+  color: #666;
+  display: block;
+  margin-bottom: 0.08rem;
+}
+
+.mood-meta {
+  display: flex;
+  gap: 0.12rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.08rem;
+}
+
+.mood-info {
+  display: flex;
+  gap: 0.16rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.08rem;
+}
+
+.mood-time {
+  font-size: 0.22rem;
+  color: #66bb6a;
+}
+
+.mood-inspector {
+  font-size: 0.22rem;
+  color: #9c27b0;
+}
+
+.mood-status {
+  font-size: 0.22rem;
+  padding: 0.04rem 0.12rem;
+  background: #e8f5e9;
+  border-radius: 0.2rem;
+  color: #2e7d32;
+}
+
+.mood-status-detail {
+  font-size: 0.22rem;
+  padding: 0.04rem 0.12rem;
+  background: #fff3e0;
+  border-radius: 0.2rem;
+  color: #e65100;
+}
+
+.mood-remark {
+  font-size: 0.24rem;
+  color: #1565c0;
+  background: #e3f2fd;
+  padding: 0.08rem 0.12rem;
+  border-radius: 0.06rem;
+  display: block;
+  margin-top: 0.08rem;
+  word-break: break-all;
+}
+
+/* 历史报表查询弹窗样式 */
+.history-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-modal-content {
+  width: 90%;
+  max-height: 80vh;
+  background-color: #fff;
+  border-radius: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.2);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem;
+  border-bottom: 0.02rem solid #f0f0f0;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+}
+
+.history-title {
+  font-size: 0.34rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.history-close {
+  font-size: 0.56rem;
+  color: #fff;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.history-search {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.2rem 0.3rem;
+  background-color: #f8f9fa;
+}
+
+.search-input {
+  flex: 1;
+  height: 0.8rem;
+  padding: 0 0.2rem;
+  border: 0.02rem solid #e0e0e0;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+}
+
+.search-btn {
+  height: 0.8rem;
+  padding: 0 0.3rem;
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+}
+
+/* 日期筛选样式 */
+.history-date-filter {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.15rem 0.3rem;
+  background-color: #fff;
+  border-top: 0.02rem solid #f0f0f0;
+}
+
+.date-picker {
+  flex: 1;
+  height: 0.7rem;
+  padding: 0 0.2rem;
+  border: 0.02rem solid #e0e0e0;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+}
+
+.date-reset-btn {
+  height: 0.7rem;
+  padding: 0 0.25rem;
+  background-color: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.26rem;
+}
+
+.history-list {
+  flex: 1;
+  padding: 0.2rem;
+  overflow-y: auto;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 1.0rem 0;
+  color: #999;
+  font-size: 0.28rem;
+}
+
+.history-item {
+  padding: 0.25rem;
+  background-color: #f8f9fa;
+  border-radius: 0.12rem;
+  margin-bottom: 0.15rem;
+  border-left: 0.06rem solid #1976d2;
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.1rem;
+}
+
+.history-number {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+.history-time {
+  font-size: 0.24rem;
+  color: #999;
+}
+
+.history-filename {
+  display: block;
+  font-size: 0.26rem;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+
+.history-type {
+  display: block;
+  font-size: 0.24rem;
+  color: #666;
+}
+
+.history-footer {
+  padding: 0.2rem 0.3rem;
+  border-top: 0.02rem solid #f0f0f0;
+}
+
+.history-close-btn {
+  width: 100%;
+  height: 0.8rem;
+  background-color: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.3rem;
+}
+
+/* 配置区域按钮布局 */
+.config-row {
+  display: flex;
+  gap: 0.2rem;
+  margin-bottom: 0.2rem;
+  align-items: center;
+}
+
+.config-row:last-child {
+  margin-bottom: 0;
+}
+
+.refresh-btn {
+  flex: 1;
+  height: 0.8rem;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+}
+
+.history-btn {
+  flex: 1;
+  height: 0.8rem;
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+}
+
+/* 状态占比饼图 */
+.pie-section {
+  background: #fff;
+  border-radius: 0.2rem;
+  padding: 0.3rem;
+  margin-bottom: 0.3rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.06);
+}
+
+.pie-box {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.pie-legend {
+  flex: 1;
+  min-width: 3.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.12rem;
+  font-size: 0.26rem;
+  color: #444;
+}
+
+.pie-dot {
+  width: 0.2rem;
+  height: 0.2rem;
+  border-radius: 0.04rem;
+  flex-shrink: 0;
+}
+
+.pie-label {
+  flex: 1;
+}
+
+.pie-value {
+  color: #666;
+}
+
+.pie-empty {
+  color: #999;
+  font-size: 0.26rem;
+  padding: 0.2rem 0;
+}

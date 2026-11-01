@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/work.css">
+  <style>
+    /* 设备列表交给整页滚动，避免移动端出现双层滚动条 */
+    .device-list { max-height: none; overflow: visible; }
+  </style>
+  <title>呆子记录表</title>
+</head>
+<body>
+
+<div class="work-container">
+  <div class="fixed-header">
+    <!-- 搜索框 -->
+    <div class="search-bar">
+      <div class="search-input-wrapper">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" placeholder="搜索设备名称或位置" oninput="onSearch(this.value)">
+        <span class="clear-search" id="clearSearch" style="display:none" onclick="clearSearch()">×</span>
+      </div>
+      <!-- 状态筛选（与小程序一致：全部/正常/警告/错误/未检查） -->
+      <div class="status-filter-btn" id="filterBtn" onclick="showStatusFilter()"><span id="filterBtnText">全部</span></div>
+    </div>
+    <div class="status-filter-menu" id="statusFilterMenu" style="display:none">
+      <div class="s-menu-item" onclick="setStatusFilter('all')"><span class="s-menu-text">全部</span></div>
+      <div class="s-menu-item" onclick="setStatusFilter('normal')"><span class="s-menu-text" id="filterTextNormal">正常</span></div>
+      <div class="s-menu-item" onclick="setStatusFilter('warning')"><span class="s-menu-text" id="filterTextWarning">警告</span></div>
+      <div class="s-menu-item" onclick="setStatusFilter('error')"><span class="s-menu-text" id="filterTextError">错误</span></div>
+      <div class="s-menu-item" onclick="setStatusFilter('pending')"><span class="s-menu-text">未检查</span></div>
+    </div>
+
+    <!-- 点检进度条 -->
+    <div class="inspection-progress">
+      <div class="progress-bar-with-stats">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <span class="progress-stats-small"><span id="checkedCount">0</span>/<span id="totalCount">0</span> (<span id="progressPct">0</span>%)</span>
+      </div>
+    </div>
+
+    <!-- 横排并列按钮组 -->
+    <div class="batch-actions">
+      <button class="batch-btn" type="button" id="remarkBtn" onclick="showAllRemarkSheet()">备注</button>
+      <button class="batch-btn area-toggle-btn" type="button" id="areaToggleBtn" onclick="toggleAreaList()">总区域 ▼</button>
+      <button class="batch-btn dropdown-btn" type="button" id="sBtn" onclick="toggleSButtonMenu()">S ▼</button>
+      <button class="batch-btn x-btn" type="button" id="xBtn" onclick="toggleMachineInfoExpand()">X ▼</button>
+    </div>
+
+    <!-- S 按钮下拉菜单（与小程序一致：仅这 5 项，按检查项目开关互斥显示） -->
+    <div class="s-dropdown-menu" id="sMenu" style="display:none">
+      <div class="s-menu-item" onclick="goPage('./history.html')">
+        <span class="s-menu-icon">📋</span><span class="s-menu-text">历史记录</span>
+      </div>
+      <div class="s-menu-item" onclick="goPage('./report.html')">
+        <span class="s-menu-icon">📊</span><span class="s-menu-text">生成报表</span>
+      </div>
+      <div class="s-menu-item" id="sMenuItemManager" onclick="openInspectionManager()">
+        <span class="s-menu-icon">⚙️</span><span class="s-menu-text">检查项目管理</span>
+      </div>
+      <div class="s-menu-item" id="sMenuItemEnableInsp" onclick="enableInspectionFromMenu()">
+        <span class="s-menu-icon">⭕</span><span class="s-menu-text">开启检查项目</span>
+      </div>
+      <div class="s-menu-item" id="sMenuItemDisableInsp" onclick="disableInspectionFromMenu()">
+        <span class="s-menu-icon">❌</span><span class="s-menu-text">关闭检查项目</span>
+      </div>
+      <div class="s-menu-item" onclick="goPage('./import_export.html')">
+        <span class="s-menu-icon">📥</span><span class="s-menu-text">数据导入导出</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 区域分组 -->
+  <div class="area-groups" id="areaGroups" style="display:none">
+    <div class="empty-state" id="emptyState" style="display:none">
+      <span class="empty-icon" id="emptyIcon">👆</span>
+      <span class="empty-text" id="emptyText">点击总区域▲选择分区，或搜索设备</span>
+    </div>
+
+    <!-- 区域列表（JS 渲染） -->
+    <div class="area-list" id="areaList" style="display:none"></div>
+
+    <!-- 已选设备信息面板 -->
+    <div class="selected-machine-info-panel" id="selectedInfoPanel" style="display:none">
+      <div class="selected-machine-info-header">
+        <span class="selected-machine-info-title">设备信息</span>
+        <span class="selected-machine-info-close" onclick="clearSelectedMachine()">✕</span>
+      </div>
+      <div class="selected-machine-info-content">
+        <div id="selectedInfoContent"></div>
+
+        <!-- 检查项目 -->
+        <div class="inspection-section" id="inspectionSection" style="display:none">
+          <span class="inspection-title">检查项目</span>
+          <div class="inspection-items" id="inspectionList"></div>
+          <span class="inspection-hint" id="inspectionHint"></span>
+        </div>
+
+        <!-- 设备图片 -->
+        <div class="machine-images-entry" onclick="toggleImagesSection()">
+          <span class="images-entry-text">设备图片</span>
+          <span class="images-entry-count" id="imgCountHint"></span>
+          <span class="images-entry-arrow" id="imagesEntryArrow">▶</span>
+        </div>
+        <div class="machine-images-section" id="imagesSection" style="display:none">
+          <div class="img-grid" id="imgGrid"></div>
+          <div class="photo-actions">
+            <button class="photo-btn" type="button" id="cameraBtn" onclick="takePhoto()">📷 拍照</button>
+            <button class="photo-btn album" type="button" id="albumBtn" onclick="pickFromAlbum()">🖼️ 相册</button>
+          </div>
+          <div class="no-images-hint" id="photoHint">请先选择设备，再拍照记录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设备列表 -->
+  <div class="device-list">
+    <div class="list-header">
+      <span class="list-title">设备列表 (<span id="listCount">0</span>)</span>
+    </div>
+    <div id="deviceItems"></div>
+  </div>
+
+  <!-- 存储状态（无图片时隐藏） -->
+  <div class="area-groups" id="storageStatBlock" style="display:none">
+    <div class="list-header"><span class="list-title">存储状态</span></div>
+    <div class="stats-bar">
+      <span>图片 <strong id="imgCount">0</strong> 张</span>
+      <span>占用 <strong id="imgSize">0</strong> KB</span>
+      <span>上限 <strong>200</strong> MB</span>
+    </div>
+  </div>
+</div>
+
+<!-- 隐藏 Canvas（水印绘制） -->
+<canvas id="watermarkCanvas" style="position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none" width="1280" height="720"></canvas>
+
+<!-- 设备操作操作表 -->
+<div class="action-sheet-mask" id="actionMask" onclick="hideActionSheet()"></div>
+<div class="action-sheet" id="actionSheet">
+  <div class="action-title" id="actionTitle">设备操作</div>
+  <div class="action-item normal" onclick="setStatus('normal')">✓ <span id="labelNormal">正常</span></div>
+  <div class="action-item warning" onclick="setStatus('warning')">⚠ <span id="labelWarning">警告</span></div>
+  <div class="action-item error" onclick="setStatus('error')">✕ <span id="labelError">错误</span></div>
+  <div class="action-item remark" onclick="openRemark()">📝 添加/修改备注</div>
+  <div class="action-item edit" onclick="openEdit()">✏️ 编辑设备</div>
+  <div class="action-item clear" onclick="setStatus('')">↺ 清除状态</div>
+  <div class="action-item delete" onclick="deleteMachine()">🗑️ 删除设备</div>
+  <div class="action-cancel" onclick="hideActionSheet()">取消</div>
+</div>
+
+<!-- 长按设备后的快速操作（与小程序长按菜单一致） -->
+<div class="action-sheet-mask" id="quickMask" onclick="hideQuickAction()"></div>
+<div class="action-sheet" id="quickActionSheet">
+  <div class="action-title" id="quickTitle">快速操作</div>
+  <div class="action-item warning" onclick="quickSetStatus('warning')">⚠ <span id="quickLabelWarning">警告</span></div>
+  <div class="action-item error" onclick="quickSetStatus('error')">✕ <span id="quickLabelError">错误</span></div>
+  <div class="action-item clear" onclick="quickSetStatus('')">↺ 重置状态</div>
+  <div class="action-item remark" id="quickUploadItem" onclick="quickUpload()" style="display:none">🖼️ 上传图片</div>
+  <div class="action-cancel" onclick="hideQuickAction()">取消</div>
+</div>
+
+<!-- 备注弹窗 -->
+<div class="modal-mask" id="remarkMask">
+  <div class="modal-box">
+    <div class="modal-title" id="remarkTitle">添加备注</div>
+    <!-- 快捷符号栏（与小程序一致：+ / − / 显） -->
+    <div class="remark-quick-bar">
+      <span class="remark-quick-btn" onclick="insertRemarkSymbol('+')">+</span>
+      <span class="remark-quick-btn" onclick="insertRemarkSymbol('-')">−</span>
+      <span class="remark-quick-btn remark-quick-yuan" onclick="fillExistingRemark()">显</span>
+    </div>
+    <div class="modal-body">
+      <textarea class="modal-textarea" id="remarkInput" placeholder="输入备注内容..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideRemark()">取消</button>
+      <button class="modal-btn confirm" type="button" onclick="confirmRemark()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批量备注弹窗（对齐小程序：标题「批量备注 (N台设备)」、输入框在上、追加模式开关在下） -->
+<div class="modal-mask" id="batchRemarkMask">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="batchRemarkTitle">批量备注</div>
+      <span class="modal-close" onclick="hideBatchRemark()">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="remark-input-container">
+        <textarea class="modal-textarea" id="batchRemarkInput" placeholder="请输入批量备注内容" maxlength="500"></textarea>
+      </div>
+      <div class="remark-options">
+        <div class="remark-option-row">
+          <span class="remark-option-label">追加模式</span>
+          <div class="pwa-switch" id="batchRemarkAppendSwitch" onclick="toggleBatchRemarkAppend()"></div>
+        </div>
+        <span class="remark-option-hint" id="batchRemarkHint">开启追加模式后，备注将添加到现有备注后面</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideBatchRemark()">取消</button>
+      <button class="modal-btn confirm" type="button" onclick="confirmBatchRemark()">确认备注</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑设备弹窗 -->
+<div class="modal-mask" id="editMask">
+  <div class="modal-box">
+    <div class="modal-title">编辑设备</div>
+    <div class="modal-body">
+      <div class="form-label">区域</div>
+      <input type="text" class="modal-input" id="editArea" placeholder="如：1区域">
+      <div class="form-label">编号</div>
+      <input type="text" class="modal-input" id="editName" placeholder="如：5">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideEdit()">取消</button>
+      <button class="modal-btn confirm" type="button" onclick="confirmEdit()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增设备弹窗 -->
+<div class="modal-mask" id="addMask">
+  <div class="modal-box">
+    <div class="modal-title">新增设备</div>
+    <div class="modal-body">
+      <div class="form-label">区域（可留空）</div>
+      <input type="text" class="modal-input" id="addArea" placeholder="如：1区域">
+      <div class="form-label">编号</div>
+      <input type="text" class="modal-input" id="addName" placeholder="如：5">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideAddDevice()">取消</button>
+      <button class="modal-btn confirm" type="button" onclick="confirmAddDevice()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 回收站弹窗 -->
+<div class="modal-mask" id="recycleMask">
+  <div class="modal-box">
+    <div class="modal-title">回收站（<span id="recycleTotal">0</span>台）</div>
+    <div class="recycle-select-all" id="recycleSelectAll" onclick="toggleRecycleSelectAll()">全选</div>
+    <div class="recycle-list" id="recycleList"></div>
+    <div class="recycle-actions">
+      <button class="modal-btn cancel" type="button" onclick="hideRecycleBin()">关闭</button>
+      <button class="modal-btn danger" type="button" onclick="emptyRecycleBin()">清空</button>
+      <button class="modal-btn confirm" type="button" onclick="restoreSelected()">恢复选中</button>
+    </div>
+  </div>
+</div>
+
+<!-- 检查项目设置弹窗 -->
+<div class="modal-mask" id="inspMask">
+  <div class="modal-box">
+    <div class="modal-title">检查项目设置</div>
+    <div class="modal-body">
+      <label class="insp-switch-row">
+        <input type="checkbox" id="inspEnabled" onchange="toggleInspectionFlag('enabled')"> 开启检查项目功能
+      </label>
+      <label class="insp-switch-row">
+        <input type="checkbox" id="inspShowInList" onchange="toggleInspectionFlag('showInList')"> 设备列表显示检查项
+      </label>
+      <label class="insp-switch-row">
+        <input type="checkbox" id="inspAutoMark" onchange="toggleInspectionFlag('autoMark')"> 点检为正常时自动标记全部项目
+      </label>
+
+      <div class="form-label">显示模式</div>
+      <div class="insp-mode-row">
+        <span class="insp-mode-btn" id="inspModeAll" onclick="setInspectionDisplayMode('all')">全部显示</span>
+        <span class="insp-mode-btn" id="inspModeExpand" onclick="setInspectionDisplayMode('expand')">选配模式</span>
+      </div>
+      <div class="insp-max-row">
+        <span class="insp-max-label">选配最多可选</span>
+        <input class="insp-max-input" id="inspMaxSelectInput" type="number" min="1" max="10" onchange="onInspectionMaxSelectChange()">
+      </div>
+
+      <div class="form-label">备注联动（选配后写入备注）</div>
+      <div class="insp-mode-row">
+        <span class="insp-mode-btn" data-link="0" onclick="setInspectionRemarkLink(0)">不联动</span>
+        <span class="insp-mode-btn" data-link="1" onclick="setInspectionRemarkLink(1)">仅数值</span>
+        <span class="insp-mode-btn" data-link="2" onclick="setInspectionRemarkLink(2)">所有值</span>
+      </div>
+
+      <label class="insp-switch-row">
+        <input type="checkbox" id="inspHideRemarkValue" onchange="toggleInspectionFlag('hideRemarkValue')"> 隐藏进备注的数值（80装备+63W → 80装备）
+      </label>
+
+      <div class="form-label">项目列表（可增删改，应用后下发到所有设备）</div>
+      <div id="inspItemList"></div>
+      <div class="insp-add-row" onclick="addInspectionItemRow()">＋ 新增一项</div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideInspectionManager()">取消</button>
+      <button class="modal-btn" type="button" onclick="saveDefaultInspectionItems()">仅存默认</button>
+      <button class="modal-btn confirm" type="button" onclick="applyInspectionItems()">应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- 检查项结果选择弹窗 -->
+<div class="modal-mask" id="inspResultMask">
+  <div class="modal-box">
+    <div class="modal-title" id="inspResultTitle">选择结果</div>
+    <div class="modal-body">
+      <div class="insp-result-row" data-result="正常" onclick="pickInspectionResult('正常')">✓ 正常</div>
+      <div class="insp-result-row" data-result="异常" onclick="pickInspectionResult('异常')">✕ 异常</div>
+      <div class="insp-result-row" data-result="待检查" onclick="pickInspectionResult('待检查')">○ 待检查（清除）</div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" type="button" onclick="hideInspectionResultModal()">取消</button>
+      <button class="modal-btn confirm" type="button" onclick="confirmInspectionResult()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 全部备注操作表（长按「备注」按钮，对齐小程序 custom-action-sheet 样式） -->
+<div class="remark-sheet" id="allRemarkSheet" style="display:none">
+  <div class="remark-sheet-mask" onclick="hideAllRemarkSheet()"></div>
+  <div class="remark-sheet-content">
+    <div class="remark-sheet-title">全部备注</div>
+    <div class="remark-sheet-list">
+      <div class="remark-sheet-item" onclick="onAllRemarkSelect(0)">全部备注</div>
+      <div class="remark-sheet-item" onclick="onAllRemarkSelect(1)">
+        <span class="remark-dot" style="color:#07c160">●</span><span id="allRemarkNormal">正常</span>备注
+      </div>
+      <div class="remark-sheet-item" onclick="onAllRemarkSelect(2)">
+        <span class="remark-dot" style="color:#faad14">●</span><span id="allRemarkWarning">警告</span>备注
+      </div>
+      <div class="remark-sheet-item" onclick="onAllRemarkSelect(3)">
+        <span class="remark-dot" style="color:#fa5151">●</span><span id="allRemarkError">错误</span>备注
+      </div>
+      <div class="remark-sheet-item" onclick="hideAllRemarkSheet()">取消</div>
+    </div>
+  </div>
+</div>
+
+<!-- 选配模式：选择要操作的检查项 -->
+<div class="action-sheet-mask" id="inspPickMask" onclick="hideInspectionPicker()"></div>
+<div class="action-sheet" id="inspPickSheet">
+  <div class="action-title" id="inspPickTitle">选择检查项</div>
+  <div id="inspPickList"></div>
+  <div class="action-cancel" onclick="hideInspectionPicker()">取消</div>
+</div>
+
+<!-- 进度遮罩 -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box"><div class="progress-text" id="progressText">处理中...</div></div>
+</div>
+
+<!-- TabBar（与原小程序一致：首页 / 工作页面 / 设置） -->
+<div class="tab-bar">
+  <div class="tab-item" onclick="goPage('./index.html')">首页</div>
+  <div class="tab-item active">工作页面</div>
+  <div class="tab-item" onclick="goPage('./settings.html')">设置</div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script src="./js/pages/work.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(console.warn);
+  });
+}
+</script>
+</body>
+</html>

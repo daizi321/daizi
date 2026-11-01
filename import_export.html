@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/import_export.css">
+  <style>
+    /* 开关（与设置页一致） */
+    .pwa-switch {
+      width: 0.88rem;
+      height: 0.48rem;
+      border-radius: 0.24rem;
+      background: #e0e0e0;
+      position: relative;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .pwa-switch.on { background: #07c160; }
+    .pwa-switch::after {
+      content: '';
+      position: absolute;
+      top: 0.04rem;
+      left: 0.04rem;
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.2s;
+      box-shadow: 0 0.02rem 0.04rem rgba(0,0,0,0.2);
+    }
+    .pwa-switch.on::after { left: 0.44rem; }
+
+    /* 存储占用条 */
+    .storage-bar { height: 0.14rem; background: #eee; border-radius: 0.07rem; overflow: hidden; margin-bottom: 0.12rem; }
+    .storage-fill { height: 100%; width: 0; background: #07c160; transition: width 0.3s; }
+    .storage-text { font-size: 0.24rem; color: #999; }
+
+    /* 进度遮罩补充 */
+    .progress-sub { font-size: 0.24rem; color: #999; margin-top: 0.1rem; }
+    .progress-bar { width: 3.6rem; height: 0.1rem; background: #eee; border-radius: 0.05rem; overflow: hidden; margin-top: 0.2rem; }
+    .progress-fill { height: 100%; width: 0; background: #07c160; transition: width 0.3s; }
+
+    .hidden-file { display: none; }
+    .import-card { cursor: pointer; }
+    /* 开关/箭头在右侧时，描述文字需能收缩换行，避免被遮挡 */
+    .import-card .import-info { min-width: 0; }
+    .import-card .import-arrow { margin-left: 0.2rem; }
+
+    /* 通用弹窗（粘贴导入 / 区域选择） */
+    .pwa-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center; z-index: 1200; padding: 0.3rem;
+    }
+    .pwa-modal.show { display: flex; }
+    .pwa-modal-box {
+      background: #fff; border-radius: 0.2rem; width: 100%; max-width: 7rem;
+      max-height: 86vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .pwa-modal-head {
+      padding: 0.3rem; font-size: 0.32rem; font-weight: bold; color: #333;
+      border-bottom: 1px solid #f0f0f0; text-align: center;
+    }
+    .pwa-modal-body { padding: 0.24rem; overflow-y: auto; flex: 1; min-height: 0; }
+    .pwa-modal-foot { display: flex; gap: 0.2rem; padding: 0.24rem; border-top: 1px solid #f0f0f0; }
+    .pwa-modal-foot button { flex: 1; padding: 0.2rem; border-radius: 0.12rem; border: none; font-size: 0.3rem; }
+    .pwa-modal-foot .cancel { background: #f2f2f2; color: #666; }
+    .pwa-modal-foot .ok { background: #07c160; color: #fff; }
+    .pwa-textarea {
+      width: 100%; min-height: 3.6rem; box-sizing: border-box; border: 1px solid #e0e0e0;
+      border-radius: 0.12rem; padding: 0.2rem; font-size: 0.24rem; font-family: monospace;
+      line-height: 1.5; resize: vertical;
+    }
+    .area-pick-row {
+      display: flex; align-items: center; gap: 0.16rem; padding: 0.2rem 0.1rem;
+      border-bottom: 1px solid #f5f5f5; font-size: 0.28rem; color: #333;
+    }
+    .area-pick-row input { width: 0.34rem; height: 0.34rem; }
+    .area-pick-name { flex: 1; min-width: 0; }
+    .area-pick-num { color: #999; font-size: 0.24rem; }
+
+    /* 历史搜索框 */
+    .history-search {
+      width: 100%; box-sizing: border-box; margin-bottom: 0.18rem;
+      padding: 0.16rem 0.2rem; border: 1px solid #e0e0e0; border-radius: 0.12rem;
+      font-size: 0.26rem; color: #333; background: #fff;
+    }
+    .history-search:focus { outline: none; border-color: #1976d2; }
+
+    /* 导出详情行 */
+    .detail-row {
+      display: flex; justify-content: space-between; gap: 0.2rem;
+      padding: 0.16rem 0; border-bottom: 1px solid #f5f5f5; font-size: 0.26rem; color: #666;
+    }
+    .detail-row b { color: #333; font-weight: 500; text-align: right; word-break: break-all; }
+
+    /* 导入历史 */
+    .import-history-item {
+      background: #fff; border-radius: 0.16rem; padding: 0.2rem 0.24rem; margin-bottom: 0.16rem;
+      box-shadow: 0 0.02rem 0.08rem rgba(0,0,0,0.06); font-size: 0.24rem; color: #666;
+    }
+    .import-history-item .ih-mode { color: #333; font-size: 0.26rem; }
+    .import-history-empty { text-align: center; color: #999; font-size: 0.26rem; padding: 0.2rem 0; }
+
+    /* 区域选择：全选 / 清空 / 已选统计 */
+    .area-pick-tools {
+      display: flex; align-items: center; gap: 0.16rem;
+      padding: 0 0.1rem 0.16rem; border-bottom: 1px solid #f5f5f5; margin-bottom: 0.1rem;
+    }
+    .area-pick-btn {
+      background: #e3f2fd; color: #1976d2; border-radius: 0.1rem;
+      padding: 0.1rem 0.22rem; font-size: 0.24rem;
+    }
+    .area-pick-btn:active { opacity: 0.8; }
+    .area-pick-count { margin-left: auto; font-size: 0.24rem; color: #666; }
+
+    /* 导出历史 */
+    .export-history-item {
+      background: #fff; border-radius: 0.16rem; padding: 0.24rem; margin-bottom: 0.18rem;
+      box-shadow: 0 0.02rem 0.08rem rgba(0,0,0,0.06);
+    }
+    .export-history-top { display: flex; justify-content: space-between; gap: 0.2rem; }
+    .export-history-name { font-size: 0.26rem; color: #333; word-break: break-all; flex: 1; }
+    .export-history-del { color: #f44336; font-size: 0.26rem; flex-shrink: 0; }
+    .export-history-meta { font-size: 0.22rem; color: #999; margin-top: 0.1rem; }
+    .export-history-empty { text-align: center; color: #999; font-size: 0.26rem; padding: 0.28rem 0; }
+
+    /* 返回键 */
+    .back-row {
+      display: flex; align-items: center; gap: 0.1rem;
+      padding: 0.2rem 0 0; font-size: 0.3rem; color: #1976d2; cursor: pointer;
+    }
+    .back-icon { font-size: 0.34rem; }
+
+    /* 临时查看模式提示条 */
+    .temp-view-bar {
+      background: #fff8e1; border: 1px solid #ffe082; border-radius: 0.16rem;
+      padding: 0.2rem 0.24rem; margin: 0.2rem 0 0;
+      display: flex; flex-direction: column; gap: 0.12rem;
+    }
+    .temp-view-text { font-size: 0.24rem; color: #8a6d00; }
+    .temp-view-btn {
+      align-self: flex-start; background: #f0b400; color: #fff;
+      padding: 0.12rem 0.24rem; border-radius: 0.1rem; font-size: 0.26rem;
+    }
+
+    /* 导入方式三选一 */
+    .import-mode-item {
+      display: flex; align-items: center; gap: 0.2rem;
+      padding: 0.22rem 0.1rem; border-bottom: 1px solid #f5f5f5; cursor: pointer;
+    }
+    .import-mode-icon { font-size: 0.4rem; }
+    .import-mode-main { flex: 1; min-width: 0; }
+    .import-mode-title { font-size: 0.3rem; color: #333; }
+    .import-mode-desc { font-size: 0.22rem; color: #999; margin-top: 0.06rem; }
+    .import-mode-tip {
+      font-size: 0.22rem; color: #1976d2; background: #e3f2fd;
+      border-radius: 0.1rem; padding: 0.16rem; margin-top: 0.2rem; line-height: 1.5;
+    }
+  </style>
+  <title>数据导入导出</title>
+</head>
+<body>
+
+<div class="container">
+  <div class="back-row" onclick="goBack()">
+    <span class="back-icon">←</span><span class="back-text">返回</span>
+  </div>
+  <div class="title-section">
+    <span class="main-title">📥 数据导入</span>
+    <span class="sub-title">支持 JSON / TXT 格式</span>
+  </div>
+
+  <!-- 临时查看模式提示条 -->
+  <div class="temp-view-bar" id="tempViewBar" style="display:none">
+    <span class="temp-view-text">👁 临时查看模式：当前为导入的临时数据，未真正写入</span>
+    <span class="temp-view-btn" onclick="exitTempView()">退出并返回原数据</span>
+  </div>
+
+  <div class="content-section">
+    <!-- 存储使用 -->
+    <div class="section-header">
+      <span class="section-icon">💾</span>
+      <span class="section-title">存储使用</span>
+    </div>
+    <div class="import-card">
+      <div class="import-info">
+        <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+        <div class="storage-text" id="storageText">计算中...</div>
+      </div>
+    </div>
+
+    <!-- 数据导出 -->
+    <div class="section-header">
+      <span class="section-icon">📤</span>
+      <span class="section-title">数据导出</span>
+    </div>
+    <div class="import-card" onclick="doExport()">
+      <span class="import-icon">💾</span>
+      <div class="import-info">
+        <div class="import-title">导出为 JSON</div>
+        <div class="import-desc" id="exportSummary">计算中...</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <div class="import-card">
+      <div class="import-info">
+        <div class="import-title">包含图片导出</div>
+        <div class="import-desc">图片转 Base64 随数据迁移，文件会变大</div>
+      </div>
+      <div class="pwa-switch on" id="switchImages" onclick="toggleExportImages()"></div>
+    </div>
+    <div class="import-card" onclick="openAreaExport()">
+      <span class="import-icon">🗂️</span>
+      <div class="import-info">
+        <div class="import-title">按区域导出</div>
+        <div class="import-desc">只导出勾选区域的设备数据</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <div class="import-card" onclick="copyExportToClipboard()">
+      <span class="import-icon">📋</span>
+      <div class="import-info">
+        <div class="import-title">复制数据到剪贴板</div>
+        <div class="import-desc">导出为 TXT 文本并复制，可直接粘贴给别人</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+
+    <!-- 数据导入 -->
+    <div class="section-header">
+      <span class="section-icon">📥</span>
+      <span class="section-title">数据导入</span>
+    </div>
+    <div class="import-card" onclick="document.getElementById('importFile').click()">
+      <span class="import-icon">📄</span>
+      <div class="import-info">
+        <div class="import-title">从文件导入</div>
+        <div class="import-desc">支持 JSON / TXT / ZIP（会覆盖当前数据，可回滚）</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <input type="file" id="importFile" accept=".json,.txt,.zip,application/json,text/plain,application/zip" class="hidden-file" onchange="doImport(this)">
+    <div class="import-card" onclick="importFromClipboard()">
+      <span class="import-icon">📋</span>
+      <div class="import-info">
+        <div class="import-title">从剪贴板导入</div>
+        <div class="import-desc">直接读取系统剪贴板里的 JSON / TXT</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <div class="import-card" onclick="openPasteImport()">
+      <span class="import-icon">📝</span>
+      <div class="import-info">
+        <div class="import-title">粘贴文本导入</div>
+        <div class="import-desc">手动粘贴 JSON / TXT 内容</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <!-- 导入前备份：可一键回到导入前（与小程序「回到导入前」一致） -->
+    <div class="import-card" id="rollbackCard" style="display:none" onclick="restorePreImport()">
+      <span class="import-icon">↩️</span>
+      <div class="import-info">
+        <div class="import-title">回到导入前</div>
+        <div class="import-desc" id="rollbackDesc"></div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+
+    <!-- 导出历史 -->
+    <div class="section-header">
+      <span class="section-icon">🕘</span>
+      <span class="section-title">导出历史</span>
+    </div>
+    <input class="history-search" id="exportHistorySearch" type="search" placeholder="搜索文件名 / 区域" oninput="renderExportHistory()">
+    <div id="exportHistoryBox"></div>
+
+    <!-- 设备管理（原工作页 S 菜单入口） -->
+    <div class="section-header">
+      <span class="section-icon">🛠️</span>
+      <span class="section-title">设备管理</span>
+    </div>
+    <div class="import-card" onclick="goWorkAction('addDevice')">
+      <span class="import-icon">➕</span>
+      <div class="import-info">
+        <div class="import-title">新增设备</div>
+        <div class="import-desc">跳转到工作页添加设备</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <div class="import-card" onclick="goWorkAction('recycleBin')">
+      <span class="import-icon">♻️</span>
+      <div class="import-info">
+        <div class="import-title">回收站</div>
+        <div class="import-desc" id="recycleCountDesc">查看 / 恢复已删除的设备</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+    <div class="import-card" onclick="doExportNoImages()">
+      <span class="import-icon">⬇️</span>
+      <div class="import-info">
+        <div class="import-title">导出 JSON（不含图片）</div>
+        <div class="import-desc">快速导出全部设备数据，体积更小</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+
+    <!-- 导入历史 -->
+    <div class="section-header">
+      <span class="section-icon">📜</span>
+      <span class="section-title">导入历史</span>
+    </div>
+    <div id="importHistoryBox"></div>
+
+    <!-- 清理 -->
+    <div class="section-header">
+      <span class="section-icon">🧹</span>
+      <span class="section-title">清理</span>
+    </div>
+    <div class="import-card" onclick="doCleanup()">
+      <span class="import-icon">🗑️</span>
+      <div class="import-info">
+        <div class="import-title">清理孤儿图片</div>
+        <div class="import-desc">只清理不被任何设备引用的图片文件，不影响巡检数据</div>
+      </div>
+      <span class="import-arrow">›</span>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="info-section">
+      <div class="info-title">📝 使用说明</div>
+      <div class="info-content">
+        <div class="info-item">• 支持格式：JSON（.json）、TXT（.txt，[section] + key: value 写法）、ZIP（内含上述两种文件）</div>
+        <div class="info-item">• 导入会覆盖当前项目数据，导入前会自动备份，可点“回到导入前”还原</div>
+        <div class="info-item">• 开启"包含图片"会使导出文件显著变大</div>
+        <div class="info-item">• 清理孤儿图片只删除未被设备引用的文件</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 tabBar -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="location.href='./index.html'">首页</div>
+    <div class="tab-item" onclick="location.href='./work.html'">工作页面</div>
+    <div class="tab-item" onclick="location.href='./settings.html'">设置</div>
+  </div>
+</div>
+
+<!-- 进度遮罩 -->
+<!-- 导入方式选择（与小程序一致：合并 / 临时查看 / 重置载入） -->
+<div class="pwa-modal" id="importModeModal">
+  <div class="pwa-modal-box">
+    <div class="pwa-modal-head">选择导入方式</div>
+    <div class="pwa-modal-body">
+      <div class="import-mode-item" onclick="confirmNormalImport()">
+        <span class="import-mode-icon">📥</span>
+        <div class="import-mode-main">
+          <div class="import-mode-title">合并导入</div>
+          <div class="import-mode-desc">只替换文件中包含的区域，其他区域保留</div>
+        </div>
+      </div>
+      <div class="import-mode-item" onclick="confirmTempImport()">
+        <span class="import-mode-icon">👁️</span>
+        <div class="import-mode-main">
+          <div class="import-mode-title">临时查看</div>
+          <div class="import-mode-desc">临时载入查看，退出后自动恢复原数据</div>
+        </div>
+      </div>
+      <div class="import-mode-item" onclick="confirmResetImport()">
+        <span class="import-mode-icon">🔄</span>
+        <div class="import-mode-main">
+          <div class="import-mode-title">重置载入</div>
+          <div class="import-mode-desc">清空当前全部数据后再导入</div>
+        </div>
+      </div>
+      <div class="import-mode-tip" id="importModeAreaTip"></div>
+    </div>
+    <div class="pwa-modal-foot">
+      <button class="cancel" type="button" onclick="hideImportModeDialog()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 复制失败兜底：手动全选复制 -->
+<div class="pwa-modal" id="copyFallbackModal">
+  <div class="pwa-modal-box">
+    <div class="pwa-modal-head">手动复制</div>
+    <div class="pwa-modal-body">
+      <textarea class="pwa-textarea" id="copyFallbackInput" readonly></textarea>
+    </div>
+    <div class="pwa-modal-foot">
+      <button class="ok" type="button" onclick="closeCopyFallback()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导出记录详情 -->
+<div class="pwa-modal" id="exportDetailModal">
+  <div class="pwa-modal-box">
+    <div class="pwa-modal-head">导出详情</div>
+    <div class="pwa-modal-body" id="exportDetailBody"></div>
+    <div class="pwa-modal-foot">
+      <button class="cancel" type="button" onclick="closeExportDetail()">关闭</button>
+      <button class="ok" type="button" onclick="reExportCurrent()">再导出一次</button>
+    </div>
+  </div>
+</div>
+
+<!-- 粘贴文本导入弹窗 -->
+<div class="pwa-modal" id="pasteModal">
+  <div class="pwa-modal-box">
+    <div class="pwa-modal-head">粘贴文本导入</div>
+    <div class="pwa-modal-body">
+      <textarea class="pwa-textarea" id="pasteInput" placeholder="把 JSON 或 TXT 内容粘贴到这里（支持 [section] / key: value 的 TXT 格式）"></textarea>
+    </div>
+    <div class="pwa-modal-foot">
+      <button class="cancel" type="button" onclick="closePasteImport()">取消</button>
+      <button class="ok" type="button" onclick="confirmPasteImport()">导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 按区域导出弹窗 -->
+<div class="pwa-modal" id="areaExportModal">
+  <div class="pwa-modal-box">
+    <div class="pwa-modal-head">选择要导出的区域</div>
+    <div class="pwa-modal-body" id="areaExportBody"></div>
+    <div class="pwa-modal-foot">
+      <button class="cancel" type="button" onclick="closeAreaExport()">取消</button>
+      <button class="ok" type="button" id="areaExportOkBtn" onclick="confirmAreaExport()">导出</button>
+    </div>
+  </div>
+</div>
+
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="progress-text" id="progressText">处理中...</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-sub" id="progressSub"></div>
+  </div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+let includeImages = true;
+
+function toggleExportImages() {
+  includeImages = !includeImages;
+  document.getElementById('switchImages').classList.toggle('on', includeImages);
+  updateExportSummary();
+  updateAreaPickCount();
+}
+
+// 导出前确认：图片较多时提示体积风险
+function confirmBeforeExport() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  let imgs = 0;
+  machines.forEach(function (m) { imgs += (m.images || []).length; });
+  if (includeImages && imgs > 20 &&
+      !confirm('本次导出包含 ' + imgs + ' 张图片，文件会很大且转换较慢。确定继续吗？')) {
+    return false;
+  }
+  return true;
+}
+
+// 快速导出：临时不含图片，导出完恢复原开关状态
+async function doExportNoImages() {
+  const prev = includeImages;
+  includeImages = false;
+  document.getElementById('switchImages').classList.remove('on');
+  updateExportSummary();
+  try {
+    await doExport();
+  } finally {
+    includeImages = prev;
+    document.getElementById('switchImages').classList.toggle('on', prev);
+    updateExportSummary();
+  }
+}
+
+// 跳转到工作页并打开对应操作（新增设备 / 回收站）
+function goWorkAction(action) {
+  location.href = './work.html?action=' + encodeURIComponent(action);
+}
+
+function updateRecycleCount() {
+  const d = wx.getStorageSync('deletedMachines');
+  const n = Array.isArray(d) ? d.length : 0;
+  const el = document.getElementById('recycleCountDesc');
+  if (el) el.textContent = n > 0 ? `${n} 台已删除设备，可查看 / 恢复` : '暂无已删除设备';
+}
+
+// ================ 存储统计 ================
+function updateStorageStats() {
+  let totalBytes = 0;
+  let fileCount = 0;
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  machines.forEach(m => {
+    (m.images || []).forEach(path => {
+      const key = path.replace(/^wxfile:\/\/usr\//, 'usr/');
+      const blob = fs._pathCache.get(key);
+      if (blob) { totalBytes += blob.size; fileCount++; }
+    });
+  });
+  // 加上可能的孤儿文件
+  for (const [key, blob] of fs._pathCache) {
+    if (key.startsWith('usr/img_')) {
+      let referenced = false;
+      machines.forEach(m => {
+        if ((m.images || []).includes('wxfile://' + key)) referenced = true;
+      });
+      if (!referenced) { totalBytes += blob.size; fileCount++; }
+    }
+  }
+  const usedMB = totalBytes / (1024 * 1024);
+  const limitMB = 200;
+  const pct = Math.min(100, (usedMB / limitMB) * 100);
+  document.getElementById('storageFill').style.width = pct + '%';
+  document.getElementById('storageText').textContent =
+    `${fileCount} 个图片文件，共 ${usedMB < 1 ? Math.round(usedMB * 1024) + 'KB' : usedMB.toFixed(2) + 'MB'} / ${limitMB}MB`;
+}
+
+// ================ 导出 ================
+function updateExportSummary() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  let totalImgs = 0;
+  machines.forEach(m => totalImgs += (m.images || []).length);
+  document.getElementById('exportSummary').textContent =
+    `${machines.length} 台设备，${totalImgs} 张图片${includeImages ? '（含图片）' : '（不含图片）'}`;
+}
+
+async function fileToBase64(path) {
+  try {
+    const b64 = fs.readFileSync(path, 'base64');
+    return b64;
+  } catch(e) {
+    try {
+      const blobUrl = fs.getBlobURL(path);
+      const res = await fetch(blobUrl);
+      const blob = await res.blob();
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    } catch(e2) {
+      return null;
+    }
+  }
+}
+
+async function doExport(areas) {
+  if (!confirmBeforeExport()) return;
+  let machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  // 按区域导出：只保留勾选区域的设备
+  const areaFilter = Array.isArray(areas) && areas.length ? areas : null;
+  if (areaFilter) {
+    machines = machines.filter(m => areaFilter.indexOf(areaKeyOf(m)) !== -1);
+  }
+  const allSettings = JSON.parse(localStorage.getItem('machineSettings') || '{}');
+
+  const data = {
+    _version: '2.0',
+    _exportTime: new Date().toISOString(),
+    projectName: wx.getStorageSync('projectName') || '',
+    projectContent: wx.getStorageSync('projectContent') || '',
+    statusNames: allSettings.statusNames || { normal: '正常', warning: '警告', error: '错误' },
+    machineSettings: allSettings,
+    checkStatus: machines,
+    machines: machines
+  };
+
+  if (includeImages) {
+    const allPaths = [];
+    machines.forEach(m => (m.images || []).forEach(p => allPaths.push(p)));
+
+    if (allPaths.length > 0) {
+      showProgress('正在转换图片...', `0/${allPaths.length}`, 0);
+      // 逐张转 base64（不并发，避免爆内存）
+      const imageBase64Map = {};
+      for (let i = 0; i < allPaths.length; i++) {
+        const b64 = await fileToBase64(allPaths[i]);
+        if (b64) imageBase64Map[allPaths[i]] = b64;
+        showProgress('正在转换图片...', `${i+1}/${allPaths.length}`, (i+1)/allPaths.length * 100);
+      }
+
+      // 把 base64 写回 machines
+      data.machines = machines.map(m => ({
+        ...m,
+        images: (m.images || []).map(p => imageBase64Map[p] || p)
+      }));
+      data.checkStatus = data.machines;
+    }
+  }
+
+  hideProgress();
+
+  // 下载 JSON
+  const jsonStr = JSON.stringify(data);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const filename = `呆子记录表_${new Date().toISOString().slice(0,10)}_${Math.random().toString(36).slice(2,6)}.json`;
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+
+  const kb = Math.round(jsonStr.length / 1024);
+  const sizeText = kb >= 1024 ? (kb / 1024).toFixed(1) + 'MB' : kb + 'KB';
+
+  // 记录导出历史（元信息，便于追溯；文件本身在下载目录）
+  saveExportRecord({
+    filename: filename,
+    time: Date.now(),
+    count: machines.length,
+    size: sizeText,
+    areas: areaFilter || []
+  });
+  renderExportHistory();
+
+  wx.showToast({
+    title: `导出成功 (${sizeText})`,
+    icon: 'success'
+  });
+}
+
+// ================ 导入前备份 / 回滚 ================
+const BACKUP_KEY = 'preImportBackup';
+const BACKUP_KEYS = ['machineStatus', 'machineSettings', 'projectName', 'projectContent', 'checkHistory', 'deletedMachines'];
+
+function createPreImportBackup() {
+  try {
+    const backup = { time: new Date().toLocaleString('zh-CN', { hour12: false }), data: {} };
+    BACKUP_KEYS.forEach(k => {
+      const v = wx.getStorageSync(k);
+      if (v !== null && v !== undefined) backup.data[k] = v;
+    });
+    wx.setStorageSync(BACKUP_KEY, backup);
+    return true;
+  } catch (e) {
+    console.warn('[PWA] 导入前备份失败:', e);
+    return false;
+  }
+}
+
+function refreshRollbackCard() {
+  const card = document.getElementById('rollbackCard');
+  const desc = document.getElementById('rollbackDesc');
+  if (!card) return;
+  const backup = wx.getStorageSync(BACKUP_KEY);
+  if (backup && backup.time) {
+    desc.textContent = '已备份导入前数据（' + backup.time + '），可一键还原';
+    card.style.display = '';
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+function restorePreImport() {
+  const backup = wx.getStorageSync(BACKUP_KEY);
+  if (!backup || !backup.data) {
+    wx.showToast({ title: '没有可还原的备份', icon: 'none' });
+    return;
+  }
+  if (!confirm('确定回到导入前的数据吗？当前数据将被备份的数据覆盖。')) return;
+  try {
+    const data = backup.data;
+    Object.keys(data).forEach(k => wx.setStorageSync(k, data[k]));
+    // 备份里没有的键（说明导入前不存在）要清掉，避免残留
+    BACKUP_KEYS.forEach(k => {
+      if (!(k in data)) wx.removeStorageSync(k);
+    });
+    wx.removeStorageSync(BACKUP_KEY);
+    refreshRollbackCard();
+    updateStorageStats();
+    updateExportSummary();
+    wx.showToast({ title: '已回到导入前', icon: 'success' });
+  } catch (e) {
+    alert('还原失败：' + e.message);
+  }
+}
+
+// ================ 文本/TXT 解析（与小程序一致） ================
+function parseTxtFile(content) {
+  try {
+    JSON.parse(content);
+    return content;
+  } catch (e) {
+    return convertTxtToJson(content);
+  }
+}
+
+// 自定义 TXT 格式 → JSON（[section] + key: value）
+function convertTxtToJson(txtContent) {
+  const lines = String(txtContent).trim().split(/\r?\n/);
+  const result = {};
+  let currentSection = null;
+  let currentData = {};
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line || line.startsWith('#') || line.startsWith('//')) continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      if (currentSection && Object.keys(currentData).length > 0) result[currentSection] = currentData;
+      currentSection = line.substring(1, line.length - 1).trim();
+      currentData = {};
+      continue;
+    }
+
+    const sep = line.indexOf(':');
+    if (sep > 0) {
+      const key = line.substring(0, sep).trim();
+      let value = line.substring(sep + 1).trim();
+      if (!isNaN(value) && value !== '') value = parseFloat(value);
+      else if (value === 'true' || value === 'false') value = value === 'true';
+      else if ((value.startsWith('[') && value.endsWith(']')) || (value.startsWith('{') && value.endsWith('}'))) {
+        try { value = JSON.parse(value); } catch (e2) {}
+      }
+      if (currentSection) currentData[key] = value;
+      else result[key] = value;
+    }
+  }
+
+  if (currentSection && Object.keys(currentData).length > 0) result[currentSection] = currentData;
+  return JSON.stringify(result, null, 2);
+}
+
+// ================ 导入 ================
+// ================ ZIP 解析（无第三方依赖，使用 DecompressionStream） ================
+async function unzipFirstText(arrayBuffer) {
+  const u8 = new Uint8Array(arrayBuffer);
+  const dv = new DataView(arrayBuffer);
+
+  // 从尾部回溯找 EOCD 记录（0x06054b50）
+  let eocd = -1;
+  const minPos = Math.max(0, u8.length - 22 - 65535);
+  for (let i = u8.length - 22; i >= minPos; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd === -1) throw new Error('不是有效的 ZIP 文件');
+
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const entries = [];
+  for (let i = 0; i < count; i++) {
+    if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    let name = '';
+    try {
+      name = new TextDecoder('utf-8').decode(u8.subarray(p + 46, p + 46 + nameLen));
+    } catch (e) {
+      name = '';
+    }
+    entries.push({ name: name, method: method, compSize: compSize, localOff: localOff });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+
+  // 优先取 .json，其次 .txt
+  const pick = entries.find(e => /\.json$/i.test(e.name)) || entries.find(e => /\.txt$/i.test(e.name));
+  if (!pick) throw new Error('ZIP 内没有找到 JSON 或 TXT 文件');
+
+  // 本地文件头（0x04034b50）→ 取数据区
+  const lp = pick.localOff;
+  const lNameLen = dv.getUint16(lp + 26, true);
+  const lExtraLen = dv.getUint16(lp + 28, true);
+  const start = lp + 30 + lNameLen + lExtraLen;
+  const raw = u8.subarray(start, start + pick.compSize);
+
+  let bytes;
+  if (pick.method === 0) {
+    bytes = raw;
+  } else {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('当前浏览器不支持解压，请用 JSON 文件导入');
+    }
+    const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+async function doImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  __importSource = file.name || '文件';
+  const isTxt = /\.txt$/i.test(file.name);
+  const isZip = /\.zip$/i.test(file.name);
+
+  if (isZip) {
+    input.value = '';
+    const zipReader = new FileReader();
+    zipReader.onload = async (ev) => {
+      try {
+        const text = await unzipFirstText(ev.target.result);
+        await importTextData(parseTxtFile(text));
+      } catch (err) {
+        alert('ZIP 解析失败：' + err.message);
+      }
+    };
+    zipReader.onerror = () => alert('读取 ZIP 失败');
+    zipReader.readAsArrayBuffer(file);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    input.value = '';
+    const raw = String(e.target.result || '');
+    await importTextData(isTxt ? parseTxtFile(raw) : raw);
+  };
+  reader.readAsText(file);
+}
+
+// 统一导入入口（文件导入 / 粘贴导入共用）
+async function importTextData(jsonText) {
+  try {
+    const data = JSON.parse(jsonText);
+    if (!data.machines && !data.checkStatus) {
+      alert('数据中没有找到设备数据！');
+      return;
+    }
+
+    const machines = data.machines || data.checkStatus;
+      showProgress('正在解析数据...', '解析 JSON', 0);
+
+      const restoredMachines = [];
+      for (let i = 0; i < machines.length; i++) {
+        const m = machines[i];
+        const newImages = [];
+        if (m.images && m.images.length > 0) {
+          for (let j = 0; j < m.images.length; j++) {
+            const img = m.images[j];
+            let storedPath;
+            if (typeof img === 'string' && img.startsWith('data:image/')) {
+              // base64 → 存储
+              storedPath = `wxfile://usr/img_import_${Date.now()}_${i}_${j}.jpg`;
+              const b64 = img.split(',')[1];
+              fs.writeFileSync(storedPath, b64, 'base64');
+              newImages.push(storedPath);
+            } else if (typeof img === 'string' && img.startsWith('wxfile://')) {
+              // 已经是路径，保留（但可能已不存在）
+              newImages.push(img);
+            }
+          }
+        }
+        restoredMachines.push({ ...m, images: newImages });
+        showProgress('正在恢复数据...', `${i+1}/${machines.length}`, (i+1)/machines.length * 100);
+      }
+
+      hideProgress();
+      // 与小程序一致：先选导入方式（合并 / 临时查看 / 重置载入）
+      __pendingImport = { data: data, machines: restoredMachines };
+      showImportModeDialog();
+    } catch(err) {
+      hideProgress();
+      alert('导入失败：' + err.message);
+    }
+}
+
+// ================ 导入方式三选一 ================
+var __pendingImport = null;
+var __importSource = '';   // 导入来源：文件名 / 剪贴板 / 粘贴文本
+
+function pendingImportAreas() {
+  if (!__pendingImport) return [];
+  const set = [];
+  __pendingImport.machines.forEach(function (m) {
+    const a = areaKeyOf(m);
+    if (set.indexOf(a) === -1) set.push(a);
+  });
+  return set;
+}
+
+function showImportModeDialog() {
+  const areas = pendingImportAreas();
+  const el = document.getElementById('importModeAreaTip');
+  if (el) {
+    el.textContent = areas.length
+      ? '文件包含区域：' + areas.join('、') + '（合并导入只合并这些区域，其他区域保留）'
+      : '文件中没有区域信息，合并导入将按整体覆盖';
+  }
+  document.getElementById('importModeModal').classList.add('show');
+}
+
+function hideImportModeDialog() {
+  document.getElementById('importModeModal').classList.remove('show');
+}
+
+async function applyPendingImport(mode) {
+  const p = __pendingImport;
+  if (!p) return;
+  hideImportModeDialog();
+
+  if (mode === 'reset' && !confirm('重置载入会先清空当前所有数据，再导入文件内容。确定继续吗？')) return;
+
+  showProgress('正在导入数据...', mode === 'merge' ? '按区域合并' : '写入数据', 30);
+
+  // 临时查看：先暂存当前数据，退出时还原
+  if (mode === 'temp') {
+    wx.setStorageSync('tempViewBackup', wx.getStorageSync('machineStatus'));
+    wx.setStorageSync('tempViewActive', true);
+  } else {
+    const backupOk = createPreImportBackup();
+    if (!backupOk && !confirm('导入前备份失败，继续导入将无法还原当前数据。确定继续吗？')) {
+      hideProgress();
+      return;
+    }
+  }
+
+  const cur = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  let next;
+  if (mode === 'merge') {
+    const importAreas = pendingImportAreas();
+    const keep = importAreas.length
+      ? cur.filter(m => importAreas.indexOf(areaKeyOf(m)) === -1)
+      : [];
+    next = keep.concat(p.machines);
+  } else {
+    next = p.machines;
+  }
+
+  // 恢复 settings
+  if (p.data.statusNames) {
+    const settings = JSON.parse(localStorage.getItem('machineSettings') || '{}');
+    settings.statusNames = p.data.statusNames;
+    localStorage.setItem('machineSettings', JSON.stringify(settings));
+  }
+  if (p.data.projectName !== undefined) wx.setStorageSync('projectName', p.data.projectName);
+  if (p.data.projectContent !== undefined) wx.setStorageSync('projectContent', p.data.projectContent);
+
+  wx.setStorageSync('machineStatus', { checkStatus: next });
+  __pendingImport = null;
+  hideProgress();
+
+  wx.showToast({
+    title: mode === 'merge' ? `已合并导入：${p.machines.length} 台`
+      : mode === 'temp' ? `临时查看：${next.length} 台` : `已重置载入：${next.length} 台`,
+    icon: 'success'
+  });
+  refreshRollbackCard();
+  updateStorageStats();
+  updateExportSummary();
+  renderTempViewBar();
+
+  saveImportRecord({
+    time: Date.now(),
+    count: p.machines.length,
+    total: next.length,
+    mode: mode,
+    source: __importSource || ''
+  });
+  __importSource = '';
+}
+
+function confirmNormalImport() { applyPendingImport('merge'); }
+function confirmTempImport() { applyPendingImport('temp'); }
+function confirmResetImport() { applyPendingImport('reset'); }
+
+// ================ 临时查看模式 ================
+function renderTempViewBar() {
+  const bar = document.getElementById('tempViewBar');
+  if (!bar) return;
+  const v = wx.getStorageSync('tempViewActive');
+  bar.style.display = (v === true || v === 'true') ? '' : 'none';
+}
+
+function exitTempView() {
+  const backup = wx.getStorageSync('tempViewBackup');
+  if (backup) wx.setStorageSync('machineStatus', backup);
+  wx.removeStorageSync('tempViewBackup');
+  wx.removeStorageSync('tempViewActive');
+  renderTempViewBar();
+  updateStorageStats();
+  updateExportSummary();
+  wx.showToast({ title: '已退出临时查看，恢复原数据', icon: 'success' });
+}
+
+function goBack() {
+  if (window.history.length > 1) window.history.back();
+  else location.href = './work.html';
+}
+
+// ================ 粘贴文本导入 ================
+function openPasteImport() {
+  const box = document.getElementById('pasteInput');
+  box.value = '';
+  document.getElementById('pasteModal').classList.add('show');
+  setTimeout(function () { box.focus(); }, 100);
+}
+
+function closePasteImport() {
+  document.getElementById('pasteModal').classList.remove('show');
+}
+
+async function confirmPasteImport() {
+  const raw = (document.getElementById('pasteInput').value || '').trim();
+  if (!raw) {
+    wx.showToast({ title: '请先粘贴内容', icon: 'none' });
+    return;
+  }
+  closePasteImport();
+  __importSource = '粘贴文本';
+  await importTextData(parseTxtFile(raw));
+}
+
+// ================ 按区域导出 ================
+var __exportAreas = [];
+
+function areaKeyOf(m) {
+  return ((m && (m.area || m.zone || m.location)) || '').trim() || '未分区';
+}
+
+function openAreaExport() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  const map = {};
+  const areas = [];
+  machines.forEach(function (m) {
+    const a = areaKeyOf(m);
+    if (map[a] === undefined) { map[a] = 0; areas.push(a); }
+    map[a] += 1;
+  });
+  if (!areas.length) {
+    wx.showToast({ title: '暂无设备数据', icon: 'none' });
+    return;
+  }
+  __exportAreas = areas;
+  document.getElementById('areaExportBody').innerHTML =
+    '<div class="area-pick-tools">' +
+      '<span class="area-pick-btn" onclick="pickAllAreas(true)">全选</span>' +
+      '<span class="area-pick-btn" onclick="pickAllAreas(false)">清空</span>' +
+      '<span class="area-pick-count" id="areaPickCount"></span>' +
+    '</div>' +
+    areas.map(function (a, i) {
+      return '<label class="area-pick-row">' +
+        '<input type="checkbox" value="' + i + '" checked onchange="updateAreaPickCount()">' +
+        '<span class="area-pick-name">' + escapeHtmlText(a) + '</span>' +
+        '<span class="area-pick-num">' + map[a] + ' 台</span>' +
+      '</label>';
+    }).join('');
+  updateAreaPickCount();
+  document.getElementById('areaExportModal').classList.add('show');
+}
+
+function pickAllAreas(on) {
+  Array.prototype.forEach.call(
+    document.querySelectorAll('#areaExportBody input[type="checkbox"]'),
+    function (el) { el.checked = !!on; }
+  );
+  updateAreaPickCount();
+}
+
+function getPickedAreas() {
+  return Array.prototype.map.call(
+    document.querySelectorAll('#areaExportBody input:checked'),
+    function (el) { return __exportAreas[parseInt(el.value, 10)]; }
+  );
+}
+
+// 已选区域 / 台数 + 按钮文案随「包含图片」开关变化
+function updateAreaPickCount() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  const picked = getPickedAreas();
+  const n = machines.filter(function (m) { return picked.indexOf(areaKeyOf(m)) !== -1; }).length;
+  const cnt = document.getElementById('areaPickCount');
+  if (cnt) cnt.textContent = '已选 ' + picked.length + ' 个区域 / ' + n + ' 台';
+  const btn = document.getElementById('areaExportOkBtn');
+  if (btn) btn.textContent = includeImages ? '导出数据和图片' : '导出数据';
+}
+
+function closeAreaExport() {
+  document.getElementById('areaExportModal').classList.remove('show');
+}
+
+function escapeHtmlText(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function confirmAreaExport() {
+  const picked = getPickedAreas();
+  if (!picked.length) {
+    wx.showToast({ title: '请至少选择一个区域', icon: 'none' });
+    return;
+  }
+  closeAreaExport();
+  doExport(picked);
+}
+
+// ================ 剪贴板导出 / 导入 ================
+function buildExportTxt(machines) {
+  const d = new Date();
+  const pad = function (n) { return String(n).padStart(2, '0'); };
+  const timeStr = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+    ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const lines = [];
+  lines.push('# 呆子记录表数据导出 ' + timeStr);
+  lines.push('[project]');
+  lines.push('projectName: ' + (wx.getStorageSync('projectName') || ''));
+  lines.push('deviceCount: ' + machines.length);
+  lines.push('');
+  lines.push('[devices]');
+  machines.forEach(function (m, i) {
+    lines.push('--- 设备 ' + (i + 1) + ' ---');
+    lines.push('name: ' + (m.displayName || m.name || ''));
+    lines.push('area: ' + areaKeyOf(m));
+    lines.push('status: ' + (m.status || ''));
+    lines.push('statusTime: ' + (m.statusTime || ''));
+    lines.push('remark: ' + (m.remark || ''));
+    lines.push('images: ' + (m.images || []).length);
+  });
+  return lines.join('\n');
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* 继续走兜底 */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (e2) {
+    return false;
+  }
+}
+
+async function copyExportToClipboard() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  if (!machines.length) {
+    wx.showToast({ title: '暂无设备数据', icon: 'none' });
+    return;
+  }
+  const txt = buildExportTxt(machines);
+  const ok = await copyText(txt);
+  if (ok) {
+    wx.showToast({ title: '已复制 ' + machines.length + ' 台设备数据', icon: 'success' });
+  } else {
+    showCopyFallback(txt);
+  }
+}
+
+function showCopyFallback(txt) {
+  const box = document.getElementById('copyFallbackInput');
+  box.value = txt;
+  document.getElementById('copyFallbackModal').classList.add('show');
+  setTimeout(function () { box.focus(); box.select(); }, 100);
+}
+
+function closeCopyFallback() {
+  document.getElementById('copyFallbackModal').classList.remove('show');
+}
+
+async function importFromClipboard() {
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    wx.showToast({ title: '浏览器不支持读取剪贴板，请手动粘贴', icon: 'none' });
+    openPasteImport();
+    return;
+  }
+  let text = '';
+  try {
+    text = await navigator.clipboard.readText();
+  } catch (e) {
+    wx.showToast({ title: '读取剪贴板失败，请手动粘贴', icon: 'none' });
+    openPasteImport();
+    return;
+  }
+  if (!text || !String(text).trim()) {
+    wx.showToast({ title: '剪贴板为空', icon: 'none' });
+    return;
+  }
+  __importSource = '剪贴板';
+  await importTextData(parseTxtFile(String(text)));
+}
+
+// ================ 导出历史 ================
+const EXPORT_HISTORY_KEY = 'exportHistory';
+const EXPORT_HISTORY_MAX = 20;
+
+function saveExportRecord(record) {
+  try {
+    const list = wx.getStorageSync(EXPORT_HISTORY_KEY) || [];
+    const arr = Array.isArray(list) ? list : [];
+    arr.unshift(record);
+    wx.setStorageSync(EXPORT_HISTORY_KEY, arr.slice(0, EXPORT_HISTORY_MAX));
+  } catch (e) {
+    console.warn('[PWA] 保存导出历史失败:', e);
+  }
+}
+
+function deleteExportRecord(time) {
+  const list = wx.getStorageSync(EXPORT_HISTORY_KEY) || [];
+  const next = (Array.isArray(list) ? list : []).filter(r => r.time !== time);
+  wx.setStorageSync(EXPORT_HISTORY_KEY, next);
+  renderExportHistory();
+  wx.showToast({ title: '已删除', icon: 'none' });
+}
+
+function renderExportHistory() {
+  const box = document.getElementById('exportHistoryBox');
+  if (!box) return;
+  const list = wx.getStorageSync(EXPORT_HISTORY_KEY) || [];
+  const arr = Array.isArray(list) ? list : [];
+  if (!arr.length) {
+    box.innerHTML = '<div class="export-history-empty">暂无导出记录</div>';
+    return;
+  }
+  // 搜索过滤（文件名 / 区域）
+  const kwEl = document.getElementById('exportHistorySearch');
+  const kw = (kwEl && kwEl.value || '').trim().toLowerCase();
+  const shown = kw ? arr.filter(function (r) {
+    const hay = ((r.filename || '') + ' ' + ((r.areas || []).join(' '))).toLowerCase();
+    return hay.indexOf(kw) !== -1;
+  }) : arr;
+
+  if (!shown.length) {
+    box.innerHTML = '<div class="export-history-empty">' + (kw ? '没有匹配的导出记录' : '暂无导出记录') + '</div>';
+    return;
+  }
+
+  box.innerHTML = shown.map(function (r) {
+    const d = new Date(r.time);
+    const when = isNaN(d.getTime()) ? '' :
+      (d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
+    return '<div class="export-history-item" onclick="openExportDetail(' + r.time + ')">' +
+      '<div class="export-history-top">' +
+        '<span class="export-history-name">' + escapeHtmlText(r.filename || '备份文件') + '</span>' +
+        '<span class="export-history-del" onclick="event.stopPropagation();deleteExportRecord(' + r.time + ')">删除</span>' +
+      '</div>' +
+      '<div class="export-history-meta">' + when + ' · ' + (r.count || 0) + ' 台设备 · ' + (r.size || '') +
+        (r.areas && r.areas.length ? ' · ' + escapeHtmlText(r.areas.join('、')) : '') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ================ 导出记录详情 / 再导出 ================
+var __currentExportRecord = null;
+
+function openExportDetail(time) {
+  const list = wx.getStorageSync(EXPORT_HISTORY_KEY) || [];
+  const r = (Array.isArray(list) ? list : []).filter(function (x) { return x.time === time; })[0];
+  if (!r) return;
+  __currentExportRecord = r;
+  const d = new Date(r.time);
+  const when = isNaN(d.getTime()) ? '' : d.toLocaleString('zh-CN', { hour12: false });
+  document.getElementById('exportDetailBody').innerHTML =
+    '<div class="detail-row"><span>文件名</span><b>' + escapeHtmlText(r.filename || '') + '</b></div>' +
+    '<div class="detail-row"><span>导出时间</span><b>' + when + '</b></div>' +
+    '<div class="detail-row"><span>设备台数</span><b>' + (r.count || 0) + ' 台</b></div>' +
+    '<div class="detail-row"><span>文件大小</span><b>' + (r.size || '-') + '</b></div>' +
+    '<div class="detail-row"><span>区域范围</span><b>' +
+      (r.areas && r.areas.length ? escapeHtmlText(r.areas.join('、')) : '全部区域') + '</b></div>';
+  document.getElementById('exportDetailModal').classList.add('show');
+}
+
+function closeExportDetail() {
+  document.getElementById('exportDetailModal').classList.remove('show');
+}
+
+// 按同一批区域再导出一次
+function reExportCurrent() {
+  const r = __currentExportRecord;
+  closeExportDetail();
+  if (!r) return;
+  doExport(r.areas && r.areas.length ? r.areas : null);
+}
+
+// ================ 导入历史 ================
+const IMPORT_HISTORY_KEY = 'importHistory';
+const IMPORT_HISTORY_MAX = 20;
+const IMPORT_MODE_TEXT = { merge: '合并导入', temp: '临时查看', reset: '重置载入' };
+
+function saveImportRecord(rec) {
+  try {
+    const list = wx.getStorageSync(IMPORT_HISTORY_KEY) || [];
+    const arr = Array.isArray(list) ? list : [];
+    arr.unshift(rec);
+    wx.setStorageSync(IMPORT_HISTORY_KEY, arr.slice(0, IMPORT_HISTORY_MAX));
+  } catch (e) {
+    console.warn('[PWA] 保存导入历史失败:', e);
+  }
+  renderImportHistory();
+}
+
+function renderImportHistory() {
+  const box = document.getElementById('importHistoryBox');
+  if (!box) return;
+  const list = wx.getStorageSync(IMPORT_HISTORY_KEY) || [];
+  const arr = Array.isArray(list) ? list : [];
+  if (!arr.length) {
+    box.innerHTML = '<div class="import-history-empty">暂无导入记录</div>';
+    return;
+  }
+  box.innerHTML = arr.map(function (r) {
+    const d = new Date(r.time);
+    const when = isNaN(d.getTime()) ? '' : d.toLocaleString('zh-CN', { hour12: false });
+    return '<div class="import-history-item">' +
+      '<div class="ih-mode">' + (IMPORT_MODE_TEXT[r.mode] || r.mode || '导入') + '</div>' +
+      '<div>' + when + ' · 导入 ' + (r.count || 0) + ' 台 · 当前共 ' + (r.total || 0) + ' 台' +
+        (r.source ? ' · ' + escapeHtmlText(r.source) : '') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function clearImportHistory() {
+  if (!confirm('确定清空导入历史吗？（不影响设备数据）')) return;
+  wx.setStorageSync(IMPORT_HISTORY_KEY, []);
+  renderImportHistory();
+}
+
+// ================ 清理孤儿 ================
+function doCleanup() {
+  const machines = (wx.getStorageSync('machineStatus') || {}).checkStatus || [];
+  const referenced = new Set();
+  machines.forEach(m => (m.images || []).forEach(p => referenced.add(p)));
+
+  let orphanCount = 0;
+  let savedBytes = 0;
+  for (const [key, blob] of fs._pathCache) {
+    if (key.startsWith('usr/img_') && !key.includes('_import_')) {
+      const fullPath = 'wxfile://' + key;
+      if (!referenced.has(fullPath)) {
+        fs.unlinkSync(fullPath);
+        orphanCount++;
+        savedBytes += blob.size;
+      }
+    }
+  }
+
+  // 清 IndexedDB
+  indexedDB.open('wx_user_data', 1).onsuccess = (e) => {
+    const db = e.target.result;
+    const tx = db.transaction('files', 'readwrite');
+    tx.objectStore('files').getAllKeys().onsuccess = (ev) => {
+      ev.target.result.forEach(key => {
+        if (key.startsWith('usr/img_')) {
+          const fullPath = 'wxfile://' + key;
+          if (!referenced.has(fullPath)) {
+            tx.objectStore('files').delete(key);
+          }
+        }
+      });
+    };
+  };
+
+  wx.showToast({
+    title: orphanCount > 0
+      ? `清理 ${orphanCount} 个文件，释放 ${(savedBytes/1024).toFixed(0)}KB`
+      : '没有需要清理的文件',
+    icon: 'none'
+  });
+  updateStorageStats();
+}
+
+// ================ 进度 ================
+function showProgress(text, sub, pct) {
+  document.getElementById('progressText').textContent = text;
+  document.getElementById('progressSub').textContent = sub || '';
+  document.getElementById('progressFill').style.width = (pct || 0) + '%';
+  document.getElementById('progressOverlay').classList.add('active');
+}
+function hideProgress() {
+  document.getElementById('progressOverlay').classList.remove('active');
+}
+
+// ================ 启动 ================
+document.addEventListener('DOMContentLoaded', () => {
+  updateStorageStats();
+  updateExportSummary();
+  refreshRollbackCard();
+  renderExportHistory();
+  renderTempViewBar();
+  renderImportHistory();
+  updateRecycleCount();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#07c160">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/history.css">
+  <style>
+    /* 底部 tabBar 与小程序 history.css 的页内 tab 区分开 */
+    .page-tabbar { position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; }
+  </style>
+  <title>历史记录</title>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-left" onclick="location.href='./work.html'">
+      <span class="back-icon">‹</span>
+      <span class="header-title">历史记录</span>
+    </div>
+  </div>
+
+  <!-- 页内标签切换：短按切换，长按清除该标签下的记录（与小程序一致） -->
+  <div class="history-tabbar">
+    <div class="tab-item active" id="tabCheck">检查历史</div>
+    <div class="tab-item" id="tabDevice">设备变更</div>
+  </div>
+
+  <div id="historyList"></div>
+</div>
+
+<!-- 检查详情弹窗 -->
+<div class="history-detail-modal" id="detailModal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title">检查详情</span>
+      <span class="close-btn" onclick="closeDetail()">×</span>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- 长按记录后的操作表（删除此记录 / 删除所有记录） -->
+<div class="action-sheet-mask" id="histActionMask" onclick="hideHistAction()"></div>
+<div class="action-sheet" id="histActionSheet">
+  <div class="action-title">选择操作</div>
+  <div class="action-item delete" onclick="deleteSingleHistory()">🗑️ 删除此记录</div>
+  <div class="action-item delete" onclick="deleteAllHistory()">🗑️ 删除所有记录</div>
+  <div class="action-cancel" onclick="hideHistAction()">取消</div>
+</div>
+
+<!-- TabBar（与原小程序一致） -->
+<div class="tab-bar page-tabbar">
+  <div class="tab-item" onclick="location.href='./index.html'">首页</div>
+  <div class="tab-item" onclick="location.href='./work.html'">工作页面</div>
+  <div class="tab-item" onclick="location.href='./settings.html'">设置</div>
+</div>
+
+<script src="./js/wx-polyfill.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+var statusNames = (wx.getStorageSync('machineSettings') || {}).statusNames ||
+  { normal: '正常', warning: '警告', error: '错误' };
+
+function statusLabel(s) {
+  if (!s || s === 'pending') return '未点检';
+  return statusNames[s] || s;
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+var activeTab = 'check';
+
+function parseTime(t) {
+  if (!t) return new Date(0);
+  if (t instanceof Date) return t;
+  if (typeof t === 'number') return new Date(t);
+  var s = String(t).trim();
+  var m = s.match(/^(\d+)[\/\-](\d+)[\/\-](\d+)[\sT]+(\d+):(\d+)(?::(\d+))?$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], m[6] ? +m[6] : 0);
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? new Date(0) : d;
+}
+
+function switchTab(tab) {
+  activeTab = tab === 'device' ? 'device' : 'check';
+  document.getElementById('tabCheck').classList.toggle('active', activeTab === 'check');
+  document.getElementById('tabDevice').classList.toggle('active', activeTab === 'device');
+  render();
+}
+
+function render() {
+  if (activeTab === 'device') renderDevice();
+  else renderCheck();
+}
+
+function renderCheck() {
+  var list = document.getElementById('historyList');
+  var history = wx.getStorageSync('checkHistory') || [];
+
+  if (!Array.isArray(history) || history.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无检查历史记录</div></div>';
+    return;
+  }
+
+  // 按日期分组（time 形如 2026/10/30 22:39:36）
+  var groups = {};
+  var order = [];
+  history.forEach(function (h) {
+    var time = h.time || '';
+    var day = time.slice(0, time.indexOf(' ') > 0 ? time.indexOf(' ') : time.length) || '未知日期';
+    if (!groups[day]) { groups[day] = []; order.push(day); }
+    groups[day].push(h);
+  });
+
+  var html = '';
+  order.forEach(function (day) {
+    html += '<div class="date-group-title">' + esc(day) + '</div>';
+    groups[day].forEach(function (h) {
+      var detail = '';
+      if (h.fromStatus !== undefined || h.toStatus !== undefined) {
+        detail = statusLabel(h.fromStatus) + ' → ' + statusLabel(h.toStatus);
+      }
+      if (h.remark) detail = detail ? detail + ' · ' + h.remark : h.remark;
+      if (h.areaName) detail = h.areaName + ' · ' + detail;
+      html += '<div class="history-item" data-id="' + esc(h.id || '') + '">' +
+        '<div class="history-item-header">' +
+          '<div class="history-item-left">' +
+            '<span class="history-machine-name">' + esc(h.machineName || '') + '</span>' +
+            '<span class="history-action-badge">' + esc(h.action || '记录') + '</span>' +
+          '</div>' +
+          '<div class="history-item-right"><span class="history-time">' + esc(h.time || '') + '</span></div>' +
+        '</div>' +
+        '<div class="history-detail-row">' +
+          '<span class="detail-label">详情</span>' +
+          '<span class="detail-value">' + esc(detail || h.details || '') + '</span>' +
+        '</div>' +
+      '</div>';
+    });
+  });
+  list.innerHTML = html;
+}
+
+/* ============ 设备变更历史 ============ */
+function renderDevice() {
+  var list = document.getElementById('historyList');
+  var records = wx.getStorageSync('deviceChangeHistory') || [];
+  if (!Array.isArray(records)) records = [];
+
+  var settings = wx.getStorageSync('machineSettings') || {};
+  var projectName = settings.projectName || wx.getStorageSync('projectName') || '';
+
+  // 补全展示字段（与小程序一致）
+  records = records.map(function (r) {
+    var isPlan = !!(r && r.action && r.action.indexOf('计划') > -1);
+    var planCount = r.planCount;
+    if (planCount === undefined || planCount === null) {
+      var m = r.detail ? String(r.detail).match(/计划数量[：:]\s*(\d+)/) : null;
+      planCount = m ? parseInt(m[1], 10) : null;
+    }
+    var lastPlan = '';
+    if (r.lastPlanTime && r.lastPlanCount !== undefined && r.lastPlanCount !== null) {
+      lastPlan = r.lastPlanCount + '台 ' + r.lastPlanTime;
+    }
+    var endTime = '';
+    var em = r.detail ? String(r.detail).match(/，(\d+\/\d+\s+\d+:\d+结束)/) : null;
+    if (em) endTime = em[1];
+    var location = r.location;
+    if (isPlan && (!location || location === '' || location === '首页')) location = projectName;
+
+    return {
+      machineName: r.machineName || '',
+      action: r.action || '变更',
+      time: r.time || '',
+      inspector: r.inspector || '',
+      detail: r.detail || '',
+      changeDetail: r.changeDetail || '',
+      isPlanAction: isPlan,
+      planCountDisplay: planCount,
+      lastPlanDisplay: lastPlan,
+      endTimeDisplay: endTime,
+      location: location
+    };
+  });
+
+  // 计划类记录固定在前，其余按时间倒序
+  records.sort(function (a, b) {
+    var aPlan = a.action.indexOf('计划') > -1;
+    var bPlan = b.action.indexOf('计划') > -1;
+    if (aPlan && !bPlan) return -1;
+    if (!aPlan && bPlan) return 1;
+    if (!a.time) return 1;
+    if (!b.time) return -1;
+    var ta = parseTime(a.time).getTime();
+    var tb = parseTime(b.time).getTime();
+    if (isNaN(ta)) return 1;
+    if (isNaN(tb)) return -1;
+    return tb - ta;
+  });
+
+  if (records.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">暂无设备变更记录</div></div>';
+    return;
+  }
+
+  var html = '';
+  var lastDay = '';
+  records.forEach(function (r) {
+    var time = r.time || '';
+    var day = time.split(' ')[0] || '未知日期';
+    if (day !== lastDay) {
+      html += '<div class="date-group-title">' + esc(day) + '</div>';
+      lastDay = day;
+    }
+    var cls = r.action === '删除' ? ' deleted' : (r.action === '恢复' ? ' restored' : '');
+    var rows = '';
+    if (!r.isPlanAction || r.location) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">设备区域：</span><span class="device-history-value">' + esc(r.location || '') + '</span></div>';
+    }
+    if (r.isPlanAction && r.planCountDisplay !== null && r.planCountDisplay !== undefined) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">当前计划：</span><span class="device-history-value">' + esc(r.planCountDisplay) + '台</span></div>';
+    }
+    if (r.isPlanAction && r.endTimeDisplay) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">结束时间：</span><span class="device-history-value">' + esc(r.endTimeDisplay) + '</span></div>';
+    }
+    if (r.isPlanAction && r.lastPlanDisplay) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">上次计划：</span><span class="device-history-value">' + esc(r.lastPlanDisplay) + '</span></div>';
+    }
+    if (r.inspector) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">检查人：</span><span class="device-history-value">👤 ' + esc(r.inspector) + '</span></div>';
+    }
+    if (!r.isPlanAction) {
+      rows += '<div class="device-history-detail"><span class="device-history-label">变更详情：</span><span class="device-history-value change-detail">' + esc(r.changeDetail || r.detail) + '</span></div>';
+    }
+
+    html += '<div class="device-history-item' + cls + '">' +
+      '<div class="device-history-header">' +
+        '<div class="device-history-left">' +
+          '<span class="device-history-machine-name">' + esc(r.machineName) + '</span>' +
+          '<span class="device-history-action">' + esc(r.action) + '</span>' +
+        '</div>' +
+        '<div class="device-history-right"><span class="device-history-time">' + esc(time.split(' ')[1] || time) + '</span></div>' +
+      '</div>' +
+      '<div class="device-history-content">' + rows + '</div>' +
+    '</div>';
+  });
+  list.innerHTML = html;
+}
+
+/* ============ 长按标签：清除该标签下的记录（与小程序一致） ============ */
+function clearTab(tab) {
+  if (tab === 'device') {
+    if (!confirm('确定要删除所有设备变更历史记录吗？计划相关记录将被保留。')) return;
+    var records = wx.getStorageSync('deviceChangeHistory') || [];
+    var kept = (Array.isArray(records) ? records : []).filter(function (r) {
+      return r && r.action && r.action.indexOf('计划') > -1;
+    });
+    wx.setStorageSync('deviceChangeHistory', kept);
+    render();
+    wx.showToast({ title: '已清除所有记录' });
+    return;
+  }
+  if (!confirm('确定要删除所有检查历史记录吗？此操作不可恢复。')) return;
+  wx.setStorageSync('checkHistory', []);
+  render();
+  wx.showToast({ title: '已清除所有记录' });
+}
+
+/* ============ 长按记录：操作表（删除此记录 / 删除所有记录） ============ */
+var selectedId = null;
+
+function showHistAction(id) {
+  selectedId = id;
+  document.getElementById('histActionMask').classList.add('active');
+  document.getElementById('histActionSheet').classList.add('active');
+}
+
+function hideHistAction() {
+  document.getElementById('histActionMask').classList.remove('active');
+  document.getElementById('histActionSheet').classList.remove('active');
+}
+
+function deleteSingleHistory() {
+  hideHistAction();
+  var logs = wx.getStorageSync('checkHistory') || [];
+  var next = (Array.isArray(logs) ? logs : []).filter(function (i) { return i.id !== selectedId; });
+  wx.setStorageSync('checkHistory', next);
+  render();
+  wx.showToast({ title: '已删除' });
+}
+
+function deleteAllHistory() {
+  hideHistAction();
+  clearTab('check');
+}
+
+/* ============ 点击记录：检查详情弹窗 ============ */
+function openDetail(id) {
+  var logs = wx.getStorageSync('checkHistory') || [];
+  var h = null;
+  (Array.isArray(logs) ? logs : []).forEach(function (i) { if (i.id === id) h = i; });
+  if (!h) return;
+
+  var status = h.toStatus || h.status || '';
+  var color = status === 'normal' ? '#07c160'
+    : (status === 'warning' ? '#ff976a'
+      : (status === 'reset' ? '#969799' : '#ee0a24'));
+  var statusText = status === 'reset' ? '已重置' : statusLabel(status);
+
+  var html = '<div class="detail-section">' +
+      '<div class="section-title">基本信息</div>' +
+      '<div class="detail-row"><span class="detail-label">设备名称：</span><span class="detail-value">' + esc(h.machineName || h.machineId || '未命名设备') + '</span></div>' +
+      (h.machineId ? '<div class="detail-row"><span class="detail-label">设备ID：</span><span class="detail-value">' + esc(h.machineId) + '</span></div>' : '') +
+      '<div class="detail-row"><span class="detail-label">设备区域：</span><span class="detail-value">' + esc(h.areaName || '未分类') + '</span></div>' +
+      (h.tag ? '<div class="detail-row"><span class="detail-label">设备标签：</span><span class="detail-value">' + esc(h.tag) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="detail-section">' +
+      '<div class="section-title">检查信息</div>' +
+      '<div class="detail-row"><span class="detail-label">检查时间：</span><span class="detail-value">' + esc(h.time || '') + '</span></div>' +
+      '<div class="detail-row"><span class="detail-label">检查人：</span><span class="detail-value">👤 ' + esc(h.checkedBy || h.inspector || '未知用户') + '</span></div>' +
+      '<div class="detail-row"><span class="detail-label">检查状态：</span>' +
+        '<span class="detail-status" style="background-color:' + color + '">' + esc(statusText) + '</span></div>' +
+    '</div>';
+
+  if (h.remark) {
+    html += '<div class="detail-section"><div class="section-title">备注信息</div>' +
+      '<div class="detail-remark">' + esc(h.remark) + '</div></div>';
+  }
+
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').style.display = 'none';
+}
+
+/* ============ 事件绑定 ============ */
+function bindLongPress(el, onLong, onShort) {
+  var timer = null;
+  var longFired = false;
+  function start() {
+    longFired = false;
+    timer = setTimeout(function () { longFired = true; onLong(); }, 500);
+  }
+  function end() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', function () {
+    end();
+    if (!longFired && onShort) onShort();
+  });
+  el.addEventListener('pointerleave', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+}
+
+// 标签：短按切换，长按清除
+bindLongPress(document.getElementById('tabCheck'), function () { clearTab('check'); }, function () { switchTab('check'); });
+bindLongPress(document.getElementById('tabDevice'), function () { clearTab('device'); }, function () { switchTab('device'); });
+
+// 列表：短按查看详情，长按弹出操作表（仅检查历史，与小程序一致）
+(function () {
+  var listEl = document.getElementById('historyList');
+  var timer = null, longFired = false, pressId = null;
+  function clear() { if (timer) { clearTimeout(timer); timer = null; } }
+  listEl.addEventListener('pointerdown', function (e) {
+    if (activeTab !== 'check') return;
+    var item = e.target.closest ? e.target.closest('.history-item[data-id]') : null;
+    if (!item) return;
+    longFired = false;
+    pressId = item.getAttribute('data-id');
+    timer = setTimeout(function () { longFired = true; showHistAction(pressId); }, 500);
+  });
+  listEl.addEventListener('pointerup', function (e) {
+    clear();
+    if (activeTab === 'check' && !longFired && pressId) {
+      var item = e.target.closest ? e.target.closest('.history-item[data-id]') : null;
+      if (item && item.getAttribute('data-id') === pressId) openDetail(pressId);
+    }
+    pressId = null;
+    longFired = false;
+  });
+  listEl.addEventListener('pointerleave', clear);
+  listEl.addEventListener('pointercancel', clear);
+  listEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+})();
+
+render();
+</script>
+</body>
+</html>

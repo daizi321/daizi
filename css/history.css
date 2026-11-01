@@ -1,0 +1,493 @@
+/* pages/history/history.wxss */
+.container {
+  padding: 0.2rem;
+  /* 预留底部固定 tabBar 空间，避免最后一条记录被遮挡 */
+  padding-bottom: 1.4rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* 页面头部样式 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  border-bottom: 0.01rem solid #eaeaea;
+}
+
+/* 标签页样式 */
+.tab-bar {
+  display: flex;
+  background-color: #f5f5f5;
+  border-radius: 0.2rem;
+  padding: 0.06rem;
+  margin: 0.2rem 0;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.16rem 0;
+  border-radius: 0.16rem;
+  font-size: 0.3rem;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  background-color: #fff;
+  color: #1976d2;
+  font-weight: bold;
+  box-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.08);
+}
+
+/* 页内标签切换：避免与底部 tab-bar（base.css 固定定位）冲突 */
+.history-tabbar {
+  display: flex;
+  background-color: #f5f5f5;
+  border-radius: 0.2rem;
+  padding: 0.06rem;
+  margin: 0.2rem 0;
+}
+
+.history-tabbar .tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.16rem 0;
+  border-radius: 0.16rem;
+  font-size: 0.3rem;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.history-tabbar .tab-item.active {
+  background-color: #fff;
+  color: #1976d2;
+  font-weight: bold;
+  box-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.08);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.back-icon {
+  font-size: 0.4rem;
+  margin-right: 0.1rem;
+  color: #333;
+}
+
+.header-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.0rem 0;
+}
+
+.loading-spinner {
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 0.06rem solid #f3f3f3;
+  border-top: 0.06rem solid #07c160;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.2rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 0.32rem;
+  color: #999;
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.0rem 0;
+}
+
+.empty-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.empty-text {
+  font-size: 0.32rem;
+  color: #999;
+}
+
+/* 日期分组标题样式 */
+.date-group-title {
+  background-color: #f5f5f5;
+  padding: 0.15rem 0.2rem;
+  margin-top: 0.2rem;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+  color: #666;
+}
+
+/* 历史记录项样式 */
+.history-item {
+  background-color: #fff;
+  border-radius: 0.15rem;
+  margin-top: 0.2rem;
+  padding: 0.25rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.history-item:active {
+  transform: translateY(0.02rem);
+  box-shadow: 0 0.01rem 0.05rem rgba(0, 0, 0, 0.05);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.history-item-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.history-machine-name {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  margin-right: 0.15rem;
+}
+
+.history-action-badge {
+  font-size: 0.24rem;
+  color: #1976d2;
+  background-color: #e3f2fd;
+  padding: 0.04rem 0.16rem;
+  border-radius: 0.15rem;
+  margin-right: 0.1rem;
+}
+
+.history-status {
+  font-size: 0.24rem;
+  color: #fff;
+  padding: 0.04rem 0.16rem;
+  border-radius: 0.15rem;
+}
+
+.history-item-right {
+  display: flex;
+  align-items: center;
+}
+
+.history-time {
+  font-size: 0.26rem;
+  color: #999;
+  margin-right: 0.2rem;
+}
+
+.delete-btn {
+  background-color: #fff0f0;
+  color: #ff4757;
+  font-size: 0.22rem;
+  padding: 0.04rem 0.12rem;
+  line-height: 1.2;
+  border-radius: 0.06rem;
+  margin: 0;
+}
+
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.15rem;
+}
+
+.share-btn {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 0.24rem;
+  padding: 0.08rem 0.2rem;
+  border-radius: 0.08rem;
+  font-weight: 500;
+}
+
+.delete-btn:active {
+  background-color: #f0f0f0;
+}
+
+.history-item-content {
+  margin-top: 0.1rem;
+}
+
+.history-detail-section {
+  background-color: #f9f9f9;
+  border-radius: 0.1rem;
+  padding: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+.history-detail-row {
+  display: flex;
+  margin-top: 0.1rem;
+  font-size: 0.28rem;
+}
+
+.history-label {
+  color: #666;
+  margin-right: 0.1rem;
+  min-width: 0.8rem;
+}
+
+.history-value {
+  color: #333;
+  flex: 1;
+  word-break: break-all;
+}
+
+.history-value.action-detail {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+/* 设备变更历史记录项样式 */
+.device-history-item {
+  background-color: #fff;
+  border-radius: 0.15rem;
+  margin-top: 0.2rem;
+  padding: 0.25rem;
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.05);
+  border-left: 0.08rem solid #2196F3;
+}
+
+.device-history-item.deleted {
+  border-left-color: #ff4757;
+  background-color: #fff5f5;
+}
+
+.device-history-item.restored {
+  border-left-color: #07c160;
+  background-color: #f0fff4;
+}
+
+.device-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.device-history-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.device-history-machine-name {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  margin-right: 0.15rem;
+}
+
+.device-history-action {
+  font-size: 0.26rem;
+  color: #2196F3;
+  background-color: #e3f2fd;
+  padding: 0.04rem 0.16rem;
+  border-radius: 0.1rem;
+}
+
+.device-history-right {
+  display: flex;
+  align-items: center;
+}
+
+.device-history-time {
+  font-size: 0.26rem;
+  color: #999;
+}
+
+.device-history-content {
+  background-color: #f9f9f9;
+  border-radius: 0.1rem;
+  padding: 0.2rem;
+}
+
+.device-history-detail {
+  display: flex;
+  margin-bottom: 0.12rem;
+  font-size: 0.28rem;
+}
+
+.device-history-detail:last-child {
+  margin-bottom: 0;
+}
+
+.device-history-label {
+  color: #666;
+  margin-right: 0.1rem;
+  min-width: 1.0rem;
+}
+
+.device-history-value {
+  color: #333;
+  flex: 1;
+  word-break: break-all;
+}
+
+.device-history-value.change-detail {
+  color: #2196F3;
+  font-weight: 500;
+}
+
+/* 历史记录详情弹窗样式 */
+.history-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 0.2rem;
+  width: 90%;
+  max-width: 8.0rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem;
+  border-bottom: 0.01rem solid #eaeaea;
+}
+
+.modal-title {
+  font-size: 0.36rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 0.48rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.modal-body {
+  padding: 0.3rem;
+}
+
+.detail-section {
+  margin-bottom: 0.4rem;
+}
+
+.section-title {
+  font-size: 0.32rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.1rem;
+  border-bottom: 0.01rem solid #f0f0f0;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 0.2rem;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.28rem;
+  color: #666;
+  min-width: 1.5rem;
+}
+
+.detail-value {
+  font-size: 0.28rem;
+  color: #333;
+  flex: 1;
+  word-break: break-all;
+}
+
+.detail-status {
+  font-size: 0.28rem;
+  color: #fff;
+  padding: 0.05rem 0.2rem;
+  border-radius: 0.2rem;
+}
+
+.detail-remark {
+  background-color: #f5f5f5;
+  padding: 0.2rem;
+  border-radius: 0.1rem;
+  font-size: 0.28rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* 重置操作简化样式 */
+.reset-content {
+  padding: 0.1rem 0;
+}
+
+.reset-hint {
+  font-size: 0.28rem;
+  color: #999;
+  font-style: italic;
+}
+
+/* 分享删除按钮容器 */
+.action-btns {
+  display: flex;
+  gap: 0.08rem;
+  align-items: center;
+}
+
+.share-btn-inline {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 0.22rem;
+  padding: 0.04rem 0.12rem;
+  line-height: 1.2;
+  border-radius: 0.06rem;
+  margin: 0;
+}
+
+/* 适配不同屏幕尺寸 */
+@media screen and (min-width: 768px) {
+  .modal-content {
+    width: 70%;
+    max-width: 9.0rem;
+  }
+}

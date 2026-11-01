@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机台点检标记</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .checklist-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .machine-number {
+            width: 80px;
+            font-weight: bold;
+        }
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #333;
+            margin: 0 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+        }
+        .checkbox.checked {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .checkbox:hover {
+            background-color: #f0f0f0;
+        }
+        .checkbox.checked:hover {
+            background-color: #45a049;
+        }
+        .status-text {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>机台点检标记表</h1>
+    <div class="checklist-container">
+        <div id="checklist"></div>
+    </div>
+
+    <script>
+        // 创建100个检查项
+        const checklist = document.getElementById('checklist');
+        
+        for (let i = 1; i <= 100; i++) {
+            const checkItem = document.createElement('div');
+            checkItem.className = 'check-item';
+            
+            // 机台号
+            const machineNumber = document.createElement('div');
+            machineNumber.className = 'machine-number';
+            machineNumber.textContent = `机台${i}`;
+            
+            // 复选框
+            const checkbox = document.createElement('div');
+            checkbox.className = 'checkbox';
+            checkbox.addEventListener('click', function() {
+                this.classList.toggle('checked');
+                this.textContent = this.classList.contains('checked') ? '✓' : '';
+            });
+            
+            // 状态文本
+            const statusText = document.createElement('div');
+            statusText.className = 'status-text';
+            statusText.textContent = '点击方框标记点检完成';
+            
+            // 组合元素
+            checkItem.appendChild(machineNumber);
+            checkItem.appendChild(checkbox);
+            checkItem.appendChild(statusText);
+            
+            checklist.appendChild(checkItem);
+        }
+    </script>
+</body>
+</html>
